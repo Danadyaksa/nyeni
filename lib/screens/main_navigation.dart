@@ -3,6 +3,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'login_screen.dart'; // Import halaman login
 import 'home_screen.dart'; // Import halaman home
+import 'profile_screen.dart';
+import 'map_screen.dart';
+import 'games_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -15,10 +18,10 @@ class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 2; // Default ke Home
 
   final List<Widget> _pages = [
-    const Center(child: Text('Halaman Profil')), // Index 0
-    const Center(child: Text('Halaman LBS / Peta Lokasi')), // Index 1
+    const ProfileScreen(), // Index 0
+    const MapScreen(), // Index 1
     HomeScreen(), // Index 2
-    const Center(child: Text('Halaman Games')), // Index 3
+    const GamesScreen(), // Index 3
     const Center(child: Text('Halaman Menu Lainnya')), // Index 4
   ];
 

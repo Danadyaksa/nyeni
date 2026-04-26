@@ -1,5 +1,8 @@
 package com.example.nyeni_app
 
-import io.flutter.embedding.android.FlutterActivity
+// Ubah import-nya menjadi FlutterFragmentActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// Ubah class turunannya menjadi FlutterFragmentActivity
+class MainActivity: FlutterFragmentActivity() {
+}
