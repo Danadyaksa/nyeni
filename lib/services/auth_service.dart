@@ -1,60 +1,43 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final Box _box = Hive.box('nyeni_box');
+  // Gunakan 10.0.2.2 jika pakai Emulator Android, 
+  // atau IP Laptop kamu (misal 192.168.1.5) jika pakai HP fisik.
+  final String baseUrl = "http://10.0.2.2:3000/api/auth";
 
-  Future<String?> register({required String name, required String email, required String password}) async {
-    try {
-      final AuthResponse res = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-      );
-
-      final user = res.user;
-      if (user != null) {
-        await _supabase.from('users').insert({
-          'id': user.id,
-          'email': email,
-          'full_name': name,
-          'total_xp': 0,
-          'level': 1,
-          'role': 'user',
-        });
-        return null;
-      }
-      return 'Gagal mendaftar.';
-    } on AuthException catch (e) {
-      return e.message;
-    } catch (e) {
-      return 'Terjadi kesalahan: $e';
-    }
+  // REGISTER
+  Future<Map<String, dynamic>> register(String email, String password, String fullName) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password, "full_name": fullName}),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<String?> login({required String email, required String password}) async {
-    try {
-      final AuthResponse res = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+  // LOGIN
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password}),
+    );
 
-      if (res.user != null) {
-        await _box.put('role', 'user');
-        await _box.put('email', email);
-        return null;
-      }
-      return 'Email atau password salah.';
-    } on AuthException catch (e) {
-      return e.message;
-    } catch (e) {
-      return 'Terjadi kesalahan: $e';
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      // Simpan token & data user ke lokal HP (Pengganti session Supabase)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+      await prefs.setString('user_data', jsonEncode(data['user']));
     }
+    return data;
   }
 
+  // LOGOUT
   Future<void> logout() async {
-    await _supabase.auth.signOut();
-    await _box.delete('role');
-    await _box.delete('email');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
   }
 }

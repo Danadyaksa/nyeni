@@ -13,13 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
-
-  // 1. Inisialisasi Supabase
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseKey,
-  );
-
+  
   // 2. Inisialisasi Hive
   await Hive.initFlutter();
   
