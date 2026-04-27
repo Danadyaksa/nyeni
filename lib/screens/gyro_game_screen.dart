@@ -21,7 +21,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
   // Variabel Fisika & Game Loop
   StreamSubscription<AccelerometerEvent>? _accelSubscription;
   Timer? _gameLoop;
-  Timer? _countdownTimer; // Tambahan Timer Mundur
+  Timer? _countdownTimer; 
   
   double _ballX = 0;
   double _ballY = 0;
@@ -36,15 +36,10 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
   bool _isPlaying = false;
   bool _isProcessingResult = false;
   
-  int _timeLeft = 0; // Sisa waktu
+  int _timeLeft = 0; 
 
-  // Batas waktu per level (dalam detik)
   final Map<int, int> _timeLimits = {
-    1: 15,
-    2: 20,
-    3: 25,
-    4: 30,
-    5: 35,
+    1: 15, 2: 20, 3: 25, 4: 30, 5: 35,
   };
 
   @override
@@ -61,106 +56,50 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     super.dispose();
   }
 
+  // ======================================================
+  // UPDATE 1: Panggil completed_levels_labirin & maybeSingle
+  // ======================================================
   Future<void> _loadUserProgress() async {
     try {
       final user = _supabase.auth.currentUser;
       if (user != null) {
-        final data = await _supabase.from('users').select('completed_levels').eq('id', user.id).single();
+        final data = await _supabase.from('users').select('completed_levels_labirin').eq('id', user.id).maybeSingle();
         setState(() {
-          _userMaxLevel = data['completed_levels'] ?? 1;
+          _userMaxLevel = data?['completed_levels_labirin'] ?? 1;
           _isLoading = false;
         });
       }
     } catch (e) {
+      debugPrint('Error Load Labirin Progress: $e');
       setState(() => _isLoading = false);
     }
   }
 
   final Map<int, List<String>> _mazes = {
     1: [
-      "WWWWWWWWWW",
-      "WS.......W",
-      "WWWWWWWW.W",
-      "W........W",
-      "W.WWWWWWWW",
-      "W........W",
-      "WWWWWWWW.W",
-      "W........W",
-      "W.WWWWWWWW",
-      "W........W",
-      "WWWWWWWW.W",
-      "W........W",
-      "W.WWWWWWWW",
-      "W.......FW",
-      "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.......W", "WWWWWWWW.W", "W........W", "W.WWWWWWWW",
+      "W........W", "WWWWWWWW.W", "W........W", "W.WWWWWWWW", "W........W",
+      "WWWWWWWW.W", "W........W", "W.WWWWWWWW", "W.......FW", "WWWWWWWWWW",
     ],
     2: [
-      "WWWWWWWWWW",
-      "WS..W....W",
-      "W.W.W.WW.W",
-      "W.W....W.W",
-      "W.WWWW.W.W",
-      "W....W.W.W",
-      "WWWW.W.W.W",
-      "W....W...W",
-      "W.WWWWWW.W",
-      "WH.......W",
-      "W.WWWWWW.W",
-      "W.W....W.W",
-      "W.W.WW.W.W",
-      "W.W.WH...F",
-      "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS..W....W", "W.W.W.WW.W", "W.W....W.W", "W.WWWW.W.W",
+      "W....W.W.W", "WWWW.W.W.W", "W....W...W", "W.WWWWWW.W", "WH.......W",
+      "W.WWWWWW.W", "W.W....W.W", "W.W.WW.W.W", "W.W.WH...F", "WWWWWWWWWW",
     ],
     3: [
-      "WWWWWWWWWW",
-      "WS.......W",
-      "W.WWWWWW.W",
-      "W.WH...W.W",
-      "W.W.WW.W.W",
-      "W.W..W.W.W",
-      "W.WW.W.W.W",
-      "W....W.W.W",
-      "WWWWWW.W.W",
-      "WH.....W.W",
-      "W.WWWWWW.W",
-      "W.W.H..W.W",
-      "W.W.WWWW.W",
-      "W........F",
-      "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.......W", "W.WWWWWW.W", "W.WH...W.W", "W.W.WW.W.W",
+      "W.W..W.W.W", "W.WW.W.W.W", "W....W.W.W", "WWWWWW.W.W", "WH.....W.W",
+      "W.WWWWWW.W", "W.W.H..W.W", "W.W.WWWW.W", "W........F", "WWWWWWWWWW",
     ],
     4: [
-      "WWWWWWWWWW",
-      "WS.W.H...W",
-      "WW.W.WWW.W",
-      "W..W.W...W",
-      "W.WW.W.WHW",
-      "W....W.W.W",
-      "WWWW.W.W.W",
-      "WH...W...W",
-      "W.WWWWWWWW",
-      "W........W",
-      "W.WWWWWW.W",
-      "W.WH...W.W",
-      "W.WWWW.W.W",
-      "W......WFW",
-      "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.W.H...W", "WW.W.WWW.W", "W..W.W...W", "W.WW.W.WHW",
+      "W....W.W.W", "WWWW.W.W.W", "WH...W...W", "W.WWWWWWWW", "W........W",
+      "W.WWWWWW.W", "W.WH...W.W", "W.WWWW.W.W", "W......WFW", "WWWWWWWWWW",
     ],
     5: [
-      "WWWWWWWWWW",
-      "WS.W...H.W",
-      "WH.W.WWW.W",
-      "W..W...W.W",
-      "W.WWWW.W.W",
-      "W.H..W.W.W",
-      "WWWW.W.W.W",
-      "WH...W...W",
-      "W.WWWWWWWW",
-      "W.H......W",
-      "WWWWWWWW.W",
-      "W.H....W.W",
-      "W.WWWW.W.W",
-      "W......WFW",
-      "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.W...H.W", "WH.W.WWW.W", "W..W...W.W", "W.WWWW.W.W",
+      "W.H..W.W.W", "WWWW.W.W.W", "WH...W...W", "W.WWWWWWWW", "W.H......W",
+      "WWWWWWWW.W", "W.H....W.W", "W.WWWW.W.W", "W......WFW", "WWWWWWWWWW",
     ]
   };
 
@@ -168,7 +107,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     _currentMaze = _mazes[level]!;
     _cellSize = screenWidth / 10; 
     _ballRadius = _cellSize * 0.35; 
-    _timeLeft = _timeLimits[level] ?? 20; // Set waktu awal
+    _timeLeft = _timeLimits[level] ?? 20;
 
     for (int r = 0; r < 15; r++) {
       for (int c = 0; c < 10; c++) {
@@ -198,14 +137,13 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
       if (_isPlaying) _updatePhysics();
     });
 
-    // Mulai Timer Mundur
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isPlaying && mounted) {
         setState(() {
           if (_timeLeft > 0) {
             _timeLeft--;
           } else {
-            _loseGame(isTimeout: true); // Kalah karena waktu habis
+            _loseGame(isTimeout: true); 
           }
         });
       }
@@ -216,7 +154,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     setState(() {
       _vx += _ax;
       _vy += _ay;
-
       _vx *= 0.92;
       _vy *= 0.92;
 
@@ -239,7 +176,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
       int row = (_ballY / _cellSize).floor().clamp(0, 14);
       
       String currentTile = _currentMaze[row][col];
-      
       double centerX = col * _cellSize + (_cellSize / 2);
       double centerY = row * _cellSize + (_cellSize / 2);
       double dist = (centerX - _ballX) * (centerX - _ballX) + (centerY - _ballY) * (centerY - _ballY);
@@ -248,7 +184,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
         if (currentTile == 'F') {
           _winGame();
         } else if (currentTile == 'H') {
-          _loseGame(isTimeout: false); // Kalah karena masuk lubang
+          _loseGame(isTimeout: false);
         }
       }
     });
@@ -271,10 +207,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
           double closestX = x.clamp(rectLeft, rectRight);
           double closestY = y.clamp(rectTop, rectBottom);
 
-          double distanceX = x - closestX;
-          double distanceY = y - closestY;
-
-          if ((distanceX * distanceX + distanceY * distanceY) < (_ballRadius * _ballRadius)) {
+          if (((x - closestX) * (x - closestX) + (y - closestY) * (y - closestY)) < (_ballRadius * _ballRadius)) {
             return true;
           }
         }
@@ -283,39 +216,85 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     return false;
   }
 
+  // ======================================================
+  // UPDATE 2: Logika Waktu, Leaderboard (game_scores), dan RPG (users)
+  // ======================================================
   void _winGame() async {
     _isPlaying = false;
     _accelSubscription?.cancel();
     _gameLoop?.cancel();
-    _countdownTimer?.cancel(); // Stop timer
+    _countdownTimer?.cancel();
     setState(() => _isProcessingResult = true);
+
+    int currentLevel = _selectedLevel ?? 1;
+    // Hitung waktu yang dihabiskan
+    int timeTaken = (_timeLimits[currentLevel] ?? 20) - _timeLeft;
 
     try {
       final user = _supabase.auth.currentUser;
       if (user != null) {
-        final res = await _supabase.from('users').select('total_xp, level, completed_levels').eq('id', user.id).single();
-        int newXp = (res['total_xp'] ?? 0) + 200;
+        
+        // --- 1. SIMPAN REKOR WAKTU KE GAME_SCORES ---
+        final existingRecord = await _supabase
+            .from('game_scores')
+            .select('id, best_time')
+            .eq('user_id', user.id)
+            .eq('game_name', 'Labirin Gyro')
+            .eq('level', currentLevel)
+            .maybeSingle();
+
+        if (existingRecord == null) {
+          // Belum pernah main level ini, cetak rekor baru
+          await _supabase.from('game_scores').insert({
+            'user_id': user.id,
+            'username': user.userMetadata?['full_name'] ?? 'Pemain Nyeni',
+            'game_name': 'Labirin Gyro',
+            'level': currentLevel,
+            'best_time': timeTaken,
+          });
+        } else {
+          // Udah pernah main, cek kalau lebih cepat, timpa!
+          int previousBest = existingRecord['best_time'];
+          if (timeTaken < previousBest) {
+            await _supabase.from('game_scores').update({
+              'best_time': timeTaken,
+            }).eq('id', existingRecord['id']);
+          }
+        }
+
+        // --- 2. KASIH XP & BUKA LEVEL DI USERS ---
+        final res = await _supabase.from('users').select('total_xp, level, completed_levels_labirin').eq('id', user.id).maybeSingle();
+        
+        int currentXp = res?['total_xp'] ?? 0;
+        int newXp = currentXp + 100; // Dapat 100 XP dari labirin
         int newLevel = (newXp ~/ 100) + 1;
         
         int updatedCompletedLevel = _userMaxLevel;
-        if (_selectedLevel == _userMaxLevel) {
+        if (currentLevel == _userMaxLevel) {
           updatedCompletedLevel = _userMaxLevel + 1;
         }
 
-        await _supabase.from('users').update({
+        await _supabase.from('users').upsert({
+          'id': user.id,
           'total_xp': newXp,
           'level': newLevel,
-          'completed_levels': updatedCompletedLevel
-        }).eq('id', user.id);
+          'completed_levels_labirin': updatedCompletedLevel
+        });
 
         setState(() { _userMaxLevel = updatedCompletedLevel; });
       }
     } catch (e) {
-      debugPrint('Update Error: $e');
+      debugPrint('Labirin Update Error: $e');
+      // Fallback lokal jika internet error
+      setState(() {
+        if (currentLevel == _userMaxLevel) {
+          _userMaxLevel = _userMaxLevel + 1;
+        }
+      });
     }
 
     if (mounted) {
-      _showResultDialog(true, false);
+      _showResultDialog(true, false, timeTaken: timeTaken);
     }
   }
 
@@ -323,11 +302,11 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     _isPlaying = false;
     _accelSubscription?.cancel();
     _gameLoop?.cancel();
-    _countdownTimer?.cancel(); // Stop timer
+    _countdownTimer?.cancel();
     _showResultDialog(false, isTimeout);
   }
 
-  void _showResultDialog(bool isWin, bool isTimeout) {
+  void _showResultDialog(bool isWin, bool isTimeout, {int? timeTaken}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -339,9 +318,19 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
             Icon(isWin ? LucideIcons.trophy : (isTimeout ? LucideIcons.timer : LucideIcons.skull), size: 80, color: isWin ? Colors.amber : Colors.red),
             const SizedBox(height: 24),
             Text(isWin ? "LEVEL SELESAI!" : (isTimeout ? "WAKTU HABIS!" : "KAMU TERJATUH!"), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isWin ? Colors.amber[700] : Colors.red[800])),
+            
+            if (isWin && timeTaken != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+                child: Text("Waktu kamu: $timeTaken Detik ⏱️", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber[900])),
+              )
+            ],
+
             const SizedBox(height: 16),
             Text(isWin 
-              ? "Luar biasa! Level berikutnya terbuka dan kamu mendapat +200 XP." 
+              ? "Luar biasa! Kamu mendapat +100 XP. Kalau kamu memecahkan rekor lamamu, datanya sudah masuk ke Leaderboard!" 
               : (isTimeout ? "Kamu terlalu lambat mencapai garis finish. Coba lagi lebih cepat!" : "Bola masuk ke lubang jebakan. Konsentrasi dan atur kemiringan HP-mu perlahan-lahan."), 
               textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, height: 1.5)),
             const SizedBox(height: 32),
@@ -443,9 +432,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
-          // ===================================
-          // UI TIMER BARU
-          // ===================================
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -471,7 +457,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // ===================================
 
           Center(
             child: Container(

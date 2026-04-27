@@ -27,13 +27,16 @@ class _TriviaScreenState extends State<TriviaScreen> {
     _loadUserProgress();
   }
 
+  // ======================================================
+  // UPDATE 1: Panggil completed_levels_trivia & maybeSingle
+  // ======================================================
   Future<void> _loadUserProgress() async {
     try {
       final user = _supabase.auth.currentUser;
       if (user != null) {
-        final data = await _supabase.from('users').select('completed_levels').eq('id', user.id).single();
+        final data = await _supabase.from('users').select('completed_levels_trivia').eq('id', user.id).maybeSingle();
         setState(() {
-          _userMaxLevel = data['completed_levels'] ?? 1;
+          _userMaxLevel = data?['completed_levels_trivia'] ?? 1;
           _isLoading = false;
         });
       }
@@ -82,9 +85,6 @@ class _TriviaScreenState extends State<TriviaScreen> {
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               
-              // =======================================================
-              // FITUR BARU: MUNCULKAN JAWABAN BENAR JIKA USER SALAH JAWAB
-              // =======================================================
               if (!isCorrect) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -108,7 +108,6 @@ class _TriviaScreenState extends State<TriviaScreen> {
                   ),
                 ),
               ],
-              // =======================================================
 
               const SizedBox(height: 16),
               Container(
@@ -168,6 +167,9 @@ class _TriviaScreenState extends State<TriviaScreen> {
     }
   }
 
+  // ======================================================
+  // UPDATE 2: maybeSingle, upsert, dan completed_levels_trivia
+  // ======================================================
   Future<void> _processLevelResult() async {
     setState(() => _isQuizFinished = true);
 
@@ -175,8 +177,9 @@ class _TriviaScreenState extends State<TriviaScreen> {
       try {
         final user = _supabase.auth.currentUser;
         if (user != null) {
-          final res = await _supabase.from('users').select('total_xp, level, completed_levels').eq('id', user.id).single();
-          int currentXp = res['total_xp'] ?? 0;
+          final res = await _supabase.from('users').select('total_xp, level, completed_levels_trivia').eq('id', user.id).maybeSingle();
+          
+          int currentXp = res?['total_xp'] ?? 0;
           int newXp = currentXp + 200; 
           int newLevel = (newXp ~/ 100) + 1;
           
@@ -185,11 +188,13 @@ class _TriviaScreenState extends State<TriviaScreen> {
             updatedCompletedLevel = _userMaxLevel + 1;
           }
 
-          await _supabase.from('users').update({
+          // Pakai upsert agar aman untuk user baru
+          await _supabase.from('users').upsert({
+            'id': user.id,
             'total_xp': newXp,
             'level': newLevel,
-            'completed_levels': updatedCompletedLevel
-          }).eq('id', user.id);
+            'completed_levels_trivia': updatedCompletedLevel
+          });
 
           setState(() {
             _userMaxLevel = updatedCompletedLevel;
@@ -197,6 +202,12 @@ class _TriviaScreenState extends State<TriviaScreen> {
         }
       } catch (e) {
         debugPrint('Update Error: $e');
+        // Fallback lokal jika internet/database bermasalah
+        setState(() {
+           if (_selectedLevel == _userMaxLevel) {
+              _userMaxLevel = _userMaxLevel + 1;
+           }
+        });
       }
     }
   }
