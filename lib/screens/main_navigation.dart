@@ -5,7 +5,9 @@ import 'login_screen.dart'; // Import halaman login
 import 'home_screen.dart'; // Import halaman home
 import 'profile_screen.dart';
 import 'map_screen.dart';
+import 'trivia_screen.dart';
 import 'games_screen.dart';
+import 'bagas_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -60,6 +62,21 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Buka halaman chat AI saat tombol diklik
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BagasScreen()),
+          );
+        },
+        backgroundColor: const Color(0xFF2C3E50), // Warna gelap khas Nyeni
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16), // Biar bentuknya agak kotak melengkung (squircle)
+        ),
+        child: const Icon(LucideIcons.bot, color: Colors.white, size: 28),
+      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
