@@ -4,28 +4,22 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // 1. TAMBAHKAN IMPORT INI
 
 void main() async {
-  // 1. Inisialisasi binding Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Inisialisasi Hive (Untuk fitur Chat/Bagas kamu)
+  await dotenv.load(fileName: ".env");
   await Hive.initFlutter();
   await Hive.openBox('nyeni_box'); 
   await Hive.openBox('bagas_chats'); 
 
-  // 3. Cek apakah ada session login lokal (SharedPreferences)
-  // Ini pengganti logic: Supabase.instance.client.auth.currentSession
-  final prefs = await SharedPreferences.getInstance();
-  final String? token = prefs.getString('token');
-
-  // Jika token tidak null, berarti user sudah login
-  runApp(NyeniApp(isLoggedIn: token != null));
+  // Tidak perlu cek token di sini lagi karena sudah di-handle di MainNavigation
+  runApp(const NyeniApp());
 }
 
 class NyeniApp extends StatelessWidget {
-  final bool isLoggedIn;
-  const NyeniApp({super.key, required this.isLoggedIn});
+  const NyeniApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +32,8 @@ class NyeniApp extends StatelessWidget {
         textTheme: GoogleFonts.outfitTextTheme(), 
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
-      // Jika isLoggedIn true langsung ke MainNavigation, jika tidak ke LoginScreen
-      home: isLoggedIn ? const MainNavigation() : const LoginScreen(), 
+      // Langsung arahkan ke MainNavigation
+      home: const MainNavigation(), 
     );
   }
 }

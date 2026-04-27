@@ -30,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _fetchUserData();
   }
 
-  // AMBIL DATA DARI NODE.JS & MYSQL
+  // AMBIL DATA TERBARU DARI NODE.JS (Termasuk Data XP dari Game)
   Future<void> _fetchUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -38,28 +38,29 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       
       if (userString != null) {
         final localUser = jsonDecode(userString);
-        // Ambil data terbaru dari server
+        
+        // 10.0.2.2 adalah localhost-nya Emulator Android
         final response = await http.get(
           Uri.parse("http://10.0.2.2:3000/api/user/${localUser['id']}"),
-        );
+        ).timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           final freshData = jsonDecode(response.body);
           setState(() {
             _userData = freshData;
-            _isLoading = false;
           });
-          // Update cache lokal
+          // Update data lokal biar sinkron
           await prefs.setString('user_data', jsonEncode(freshData));
         }
       }
     } catch (e) {
       debugPrint("Error load profile: $e");
-      setState(() => _isLoading = false);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // GANTI FOTO PROFIL (Upload ke Node.js)
+  // UPLOAD FOTO KE FOLDER 'uploads/' NODE.JS
   Future<void> _pickImage() async {
     try {
       final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 50);
@@ -79,8 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        _fetchUserData(); // Refresh data untuk dapet URL foto baru
-        if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Foto profil diperbarui!')));
+        // Tarik ulang profil untuk mendapatkan URL gambar baru
+        await _fetchUserData(); 
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Foto profil berhasil diperbarui!')));
+      } else {
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal upload gambar. Cek server Node.js')));
       }
     } catch (e) {
       debugPrint('Error upload image: $e');
@@ -106,12 +110,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               Navigator.pop(context);
               setState(() => _isLoading = true);
               
-              await http.post(
-                Uri.parse("http://10.0.2.2:3000/api/user/update-name"),
-                headers: {"Content-Type": "application/json"},
-                body: jsonEncode({"id": _userData!['id'], "full_name": nameController.text.trim()}),
-              );
-              _fetchUserData();
+              try {
+                await http.post(
+                  Uri.parse("http://10.0.2.2:3000/api/user/update-name"),
+                  headers: {"Content-Type": "application/json"},
+                  body: jsonEncode({"id": _userData!['id'], "full_name": nameController.text.trim()}),
+                );
+                // Langsung refresh nama baru
+                await _fetchUserData();
+              } catch (e) {
+                debugPrint("Error Update Name: $e");
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3E50)),
             child: const Text("Simpan", style: TextStyle(color: Colors.white)),
@@ -131,6 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
+    // Ambil total_xp (disesuaikan dengan nama kolom database yang baru)
     int totalXp = _userData?['total_xp'] ?? 0;
     
     // Logika Leveling Progresif
@@ -154,7 +164,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: AppBar(title: const Text("Profil Saya", style: TextStyle(fontWeight: FontWeight.bold)), centerTitle: true, elevation: 0, backgroundColor: Colors.white),
+      appBar: AppBar(
+        title: const Text("Profil Saya", style: TextStyle(fontWeight: FontWeight.bold)), 
+        centerTitle: true, 
+        elevation: 0, 
+        backgroundColor: Colors.white,
+        actions: [
+          // TOMBOL REFRESH UNTUK UPDATE XP SETELAH MAIN GAME
+          IconButton(
+            icon: const Icon(LucideIcons.refreshCw, color: Colors.black),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _fetchUserData();
+            },
+          )
+        ],
+      ),
       body: Column(
         children: [
           Container(
@@ -174,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       child: CircleAvatar(
                         radius: 40, 
                         backgroundColor: Colors.grey[200], 
-                        // Gunakan alamat IP server untuk load gambar dari folder uploads
+                        // Konversi URL 'localhost' dari MySQL agar bisa terbaca oleh Emulator Android (10.0.2.2)
                         backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl.replaceFirst('localhost', '10.0.2.2')) : null, 
                         child: avatarUrl == null 
                           ? const Icon(LucideIcons.user, size: 40, color: Colors.grey) 

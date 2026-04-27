@@ -1,7 +1,8 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TriviaScreen extends StatefulWidget {
   const TriviaScreen({super.key});
@@ -11,8 +12,6 @@ class TriviaScreen extends StatefulWidget {
 }
 
 class _TriviaScreenState extends State<TriviaScreen> {
-  final _supabase = Supabase.instance.client;
-  
   int? _selectedLevel;
   List<Map<String, dynamic>> _activeQuestions = [];
   int _currentQuestionIndex = 0;
@@ -27,15 +26,22 @@ class _TriviaScreenState extends State<TriviaScreen> {
     _loadUserProgress();
   }
 
+  // MENGGUNAKAN MYSQL VIA NODE.JS
   Future<void> _loadUserProgress() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user != null) {
-        final data = await _supabase.from('users').select('completed_levels_trivia').eq('id', user.id).maybeSingle();
-        setState(() {
-          _userMaxLevel = data?['completed_levels_trivia'] ?? 1;
-          _isLoading = false;
-        });
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user_data');
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        final response = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          setState(() {
+            _userMaxLevel = data['completed_levels_trivia'] ?? 1;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error loading progress: $e');
@@ -164,20 +170,26 @@ class _TriviaScreenState extends State<TriviaScreen> {
     }
   }
 
+  // MENGGUNAKAN MYSQL VIA NODE.JS DENGAN LOGIKA LEVELMU YANG LAMA
   Future<void> _processLevelResult() async {
     setState(() => _isQuizFinished = true);
 
     if (_correctCount == 10) {
       try {
-        final user = _supabase.auth.currentUser;
-        if (user != null) {
-          // Ambil data terbaru
-          final res = await _supabase.from('users').select('total_xp, completed_levels_trivia').eq('id', user.id).maybeSingle();
+        final prefs = await SharedPreferences.getInstance();
+        final userStr = prefs.getString('user_data');
+        
+        if (userStr != null) {
+          final user = jsonDecode(userStr);
           
-          int currentXp = res?['total_xp'] ?? 0;
+          // Ambil data terbaru
+          final res = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+          final data = jsonDecode(res.body);
+          
+          int currentXp = data['total_xp'] ?? 0;
           int newXp = currentXp + 100; // Reward 100 XP per level
           
-          // Hitung Level Berdasarkan Total XP Baru (Sesuai rumus profil)
+          // Hitung Level Berdasarkan Total XP Baru (Logikamu tidak diubah)
           int newLevel = 1;
           if (newXp >= 1000) newLevel = 6;
           else if (newXp >= 700) newLevel = 5;
@@ -190,23 +202,35 @@ class _TriviaScreenState extends State<TriviaScreen> {
             updatedCompletedLevel = _userMaxLevel + 1;
           }
 
-          // UPDATE KE DATABASE (Gunakan .update().eq() bukan upsert)
-          await _supabase.from('users').update({
-            'total_xp': newXp,
-            'level': newLevel,
-            'completed_levels_trivia': updatedCompletedLevel
-          }).eq('id', user.id);
+          // UPDATE KE DATABASE MYSQL
+          await http.post(
+            Uri.parse("http://10.0.2.2:3000/api/user/update-progress"),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "id": user['id'],
+              "total_xp": newXp,
+              "level": newLevel,
+              "completed_levels_trivia": updatedCompletedLevel,
+              "completed_levels_labirin": data['completed_levels_labirin'] ?? 1
+            })
+          );
 
           setState(() => _userMaxLevel = updatedCompletedLevel);
         }
       } catch (e) {
         debugPrint('🔥 Error Simpan Trivia: $e');
+        setState(() {
+           if (_selectedLevel == _userMaxLevel) _userMaxLevel = _userMaxLevel + 1;
+        });
       }
     }
   }
 
   // ==========================================
-  // DATA KUIS (Tetap sama seperti aslimu)
+  // DATA KUIS 
+  // ==========================================
+  // ==========================================
+  // DATA KUIS FINAL: 50 SOAL (5 LEVEL x 10 SOAL)
   // ==========================================
   final Map<int, List<Map<String, dynamic>>> _allQuizData = {
     1: [
@@ -233,10 +257,42 @@ class _TriviaScreenState extends State<TriviaScreen> {
       {'q': 'Songket yang benangnya menggunakan emas berasal dari...', 'opts': ['Palembang', 'Papua', 'Bali', 'Aceh'], 'ans': 'Palembang', 'fact': 'Sering dijuluki ratu segala kain karena corak timbul benang emas yang mewah.'},
       {'q': 'Patung kayu dari Bali yang sangat detail biasanya dari daerah...', 'opts': ['Kuta', 'Ubud', 'Mas', 'Celuk'], 'ans': 'Mas', 'fact': 'Desa Mas adalah jantung seni ukir patung dewa dan tokoh di Bali.'},
     ],
-    // Aku pendekkan data array untuk hemat tempat (karena datamu sudah benar, kamu bisa isi kembali data penuhnya di sini nanti ya!)
-    3: [ {'q': 'Tari Saman berasal dari...', 'opts': ['Sumut', 'Aceh', 'Jambi', 'Lampung'], 'ans': 'Aceh', 'fact': 'Tanpa instrumen musik, hanya suara tepukan dada dan tangan.'} ],
-    4: [ {'q': 'Alat musik bambu goyang dari Jawa Barat...', 'opts': ['Angklung', 'Kolintang', 'Saluang', 'Suling'], 'ans': 'Angklung', 'fact': 'Butuh kerja sama banyak orang untuk memainkan satu lagu utuh.'} ],
-    5: [ {'q': 'Museum MACAN di Jakarta...', 'opts': ['Klasik', 'Prasejarah', 'Modern & Kontemporer', 'Arsitektur'], 'ans': 'Modern & Kontemporer', 'fact': 'Museum kontemporer internasional pertama di Indonesia.'} ],
+    3: [
+      {'q': 'Tari Saman yang diakui UNESCO sebagai warisan budaya takbenda berasal dari provinsi...', 'opts': ['Sumatera Utara', 'Aceh', 'Riau', 'Sumatera Barat'], 'ans': 'Aceh', 'fact': 'Tari Saman dimainkan tanpa alat musik, hanya mengandalkan suara tepukan tangan dan paha penarinya.'},
+      {'q': 'Tarian dari Bali yang dibawakan oleh puluhan laki-laki bertelanjang dada dan meneriakkan kata "cak" adalah...', 'opts': ['Tari Barong', 'Tari Legong', 'Tari Kecak', 'Tari Pendet'], 'ans': 'Tari Kecak', 'fact': 'Tari Kecak diciptakan pada 1930-an oleh Wayan Limbak dan pelukis Jerman Walter Spies.'},
+      {'q': 'Kesenian tari tradisional yang menggunakan topeng singa raksasa berhias bulu merak berasal dari...', 'opts': ['Banyuwangi', 'Ponorogo', 'Madiun', 'Malang'], 'ans': 'Ponorogo', 'fact': 'Topeng Reog (Singo Barong) yang beratnya 50 kg hanya ditopang menggunakan gigitan penarinya.'},
+      {'q': 'Tari Jaipong yang sangat dinamis dan populer di Jawa Barat diciptakan oleh seniman...', 'opts': ['Gugum Gumbira', 'Bagong Kussudiardja', 'Didik Nini Thowok', 'Sardono W. Kusumo'], 'ans': 'Gugum Gumbira', 'fact': 'Jaipong merupakan gabungan dari kesenian tradisional Ketuk Tilu dan pencak silat.'},
+      {'q': 'Tari Piring, di mana penarinya menari lincah membawa piring di telapak tangannya, berasal dari...', 'opts': ['Bengkulu', 'Lampung', 'Sumatera Barat', 'Sumatera Selatan'], 'ans': 'Sumatera Barat', 'fact': 'Pada akhir pertunjukan, penari sering memecahkan piring dan menari di atas pecahan kaca tanpa terluka.'},
+      {'q': 'Tarian klasik dan sakral dari Keraton Jawa yang ditarikan oleh empat penari putri adalah...', 'opts': ['Tari Bedhaya', 'Tari Serimpi', 'Tari Gambyong', 'Tari Golek'], 'ans': 'Tari Serimpi', 'fact': 'Empat penari pada tari Serimpi melambangkan empat elemen alam: air, api, angin, dan bumi.'},
+      {'q': 'Tarian kreasi baru dari Sunda yang mengekspresikan keindahan burung merak jantan adalah...', 'opts': ['Tari Merak', 'Tari Kupu-Kupu', 'Tari Cendrawasih', 'Tari Garuda'], 'ans': 'Tari Merak', 'fact': 'Diciptakan oleh Raden Tjetjep Somantri pada 1950-an dengan kostum bersayap layaknya bulu merak yang mekar.'},
+      {'q': 'Tari Tortor adalah tarian komunal penyampaian batin bagi masyarakat...', 'opts': ['Minahasa', 'Dayak', 'Batak', 'Toraja'], 'ans': 'Batak', 'fact': 'Tortor diiringi alat musik Gondang Sabangunan dan dulunya ditarikan untuk berkomunikasi dengan roh leluhur.'},
+      {'q': 'Tari Pendet awalnya adalah tarian sakral di pura, namun kini sering digunakan sebagai tarian...', 'opts': ['Perang', 'Penyambutan Tamu', 'Panen Raya', 'Tolak Bala'], 'ans': 'Penyambutan Tamu', 'fact': 'Ciri khas Tari Pendet adalah gerakan menaburkan bunga dari bokor (nampan perak) ke arah tamu.'},
+      {'q': 'Tarian penyambutan tamu agung yang menggambarkan kejayaan kerajaan maritim di Sumatera Selatan adalah...', 'opts': ['Tari Tanggai', 'Tari Sekapur Sirih', 'Tari Gending Sriwijaya', 'Tari Zapin'], 'ans': 'Tari Gending Sriwijaya', 'fact': 'Penari utama memakai atribut kuku palsu dari emas (Tanggai) untuk menekankan keanggunan jari.'},
+    ],
+    4: [
+      {'q': 'Alat musik tabung bambu yang dimainkan dengan cara digoyangkan khas Jawa Barat adalah...', 'opts': ['Kolintang', 'Angklung', 'Saluang', 'Saron'], 'ans': 'Angklung', 'fact': 'Angklung diakui UNESCO pada 2010. Butuh puluhan orang menggoyangkan angklungnya untuk memainkan satu lagu utuh.'},
+      {'q': 'Sasando adalah alat musik petik berdawai yang memiliki wadah resonansi dari daun lontar, berasal dari...', 'opts': ['Pulau Rote (NTT)', 'Pulau Nias (Sumut)', 'Pulau Lombok (Bali)', 'Pulau Biak (Papua)'], 'ans': 'Pulau Rote (NTT)', 'fact': 'Nama Sasando berasal dari kata "sasandu" yang berarti alat yang bergetar atau berbunyi.'},
+      {'q': 'Alat musik perkusi bernada dari bilah-bilah kayu khas masyarakat Minahasa adalah...', 'opts': ['Talempong', 'Gamelan', 'Calung', 'Kolintang'], 'ans': 'Kolintang', 'fact': 'Nama Kolintang berasal dari bunyi kayunya: "Tong" (rendah), "Ting" (tinggi), dan "Tang" (tengah).'},
+      {'q': 'Saluang adalah alat musik tiup sejenis seruling bambu yang berasal dari daerah...', 'opts': ['Jawa Tengah', 'Minangkabau', 'Sunda', 'Madura'], 'ans': 'Minangkabau', 'fact': 'Pemain Saluang mahir teknik pernapasan melingkar agar bisa meniup tanpa terputus sama sekali.'},
+      {'q': 'Alat musik pukul yang sering mengiringi tarian perang di Papua dan Maluku adalah...', 'opts': ['Rebana', 'Tifa', 'Gendang', 'Taganing'], 'ans': 'Tifa', 'fact': 'Tifa biasanya dilapisi kulit biawak atau rusa liar agar menghasilkan suara yang sangat nyaring.'},
+      {'q': 'Dalam ansambel Gamelan Jawa, alat musik yang berfungsi sebagai konduktor pengatur irama adalah...', 'opts': ['Gong', 'Saron', 'Kendang', 'Bonang'], 'ans': 'Kendang', 'fact': 'Pemain kendang mengatur cepat lambatnya tempo irama tanpa adanya partitur tertulis.'},
+      {'q': 'Sampe adalah alat musik petik tradisional yang badannya diukir dengan motif khas suku...', 'opts': ['Batak', 'Asmat', 'Dayak', 'Toraja'], 'ans': 'Dayak', 'fact': 'Sape dulunya digunakan dalam ritual penyembuhan, kini dimainkan untuk mengiringi tarian.'},
+      {'q': 'Alat musik perkusi mirip bonang yang berasal dari Minangkabau adalah...', 'opts': ['Talempong', 'Ceng-ceng', 'Gordang', 'Aramba'], 'ans': 'Talempong', 'fact': 'Talempong bisa dimainkan sambil duduk atau sambil berjalan dalam arak-arakan budaya.'},
+      {'q': 'Sepasang simbal perunggu kecil yang menjadi ciri khas musik Gamelan Bali adalah...', 'opts': ['Tari Piring', 'Ceng-ceng', 'Kempul', 'Gong Kebyar'], 'ans': 'Ceng-ceng', 'fact': 'Ceng-ceng memberi aksen suara meledak-ledak yang membuat musik Bali terdengar sangat dinamis.'},
+      {'q': 'Alat musik ritmis bundar pipih berlapis kulit yang erat kaitannya dengan penyebaran Islam di Nusantara adalah...', 'opts': ['Tifa', 'Kendang', 'Rebana', 'Beduq'], 'ans': 'Rebana', 'fact': 'Rebana sering dimainkan untuk mengiringi kesenian bernafaskan Islam seperti Qasidah dan Hadroh.'},
+    ],
+    5: [
+      {'q': 'Museum seni modern dan kontemporer bertaraf internasional pertama di Indonesia (Jakarta) adalah...', 'opts': ['Galeri Nasional', 'Museum MACAN', 'Art:1 New Museum', 'Museum Affandi'], 'ans': 'Museum MACAN', 'fact': 'Museum MACAN pernah sangat viral karena pameran "Infinity Mirrored Room" karya Yayoi Kusama.'},
+      {'q': 'Pelukis kontemporer Bali yang karya lukisannya menampilkan sosok hitam besar bersatir komedi adalah...', 'opts': ['I Nyoman Nuarta', 'Nyoman Masriadi', 'Agus Suwage', 'Heri Dono'], 'ans': 'Nyoman Masriadi', 'fact': 'Masriadi adalah salah satu pelukis Indonesia dengan harga lukisan termahal di balai lelang dunia.'},
+      {'q': 'Seniman kontemporer dari Yogyakarta (pendiri DGTMB) yang terkenal dengan visual alien/mutan adalah...', 'opts': ['Tisna Sanjaya', 'Eko Nugroho', 'Heri Dono', 'Ugo Untoro'], 'ans': 'Eko Nugroho', 'fact': 'Eko Nugroho berhasil memasukkan unsur mural jalanan ke galeri elit, bahkan berkolaborasi dengan Louis Vuitton.'},
+      {'q': 'Karya seni rupa yang dirancang secara tiga dimensi untuk merespons dan menyatu dengan ruang pameran disebut...', 'opts': ['Seni Lukis', 'Seni Kriya', 'Seni Instalasi', 'Seni Grafis'], 'ans': 'Seni Instalasi', 'fact': 'Seni instalasi tidak hanya dilihat, tapi seringkali bisa dimasuki dan dirasakan langsung oleh pengunjung.'},
+      {'q': 'Seniman yang sering menggabungkan elemen wayang kulit tradisional dengan mesin elektronik menjadi patung kinetik adalah...', 'opts': ['Heri Dono', 'Eko Nugroho', 'Entang Wiharso', 'Raden Saleh'], 'ans': 'Heri Dono', 'fact': 'Heri Dono sering menyebut karya kinetiknya sebagai "Wayang Mesin" untuk kritik sosial politik.'},
+      {'q': 'Pameran seni rupa tahunan di Yogyakarta yang terkenal selalu mengubah fasad (wajah) gedungnya adalah...', 'opts': ['Biennale Jogja', 'FKY', 'ARTJOG', 'Indonesian Contemporary Art'], 'ans': 'ARTJOG', 'fact': 'ARTJOG merupakan salah satu bursa seni rupa kontemporer terbesar dan paling dinanti di Asia Tenggara.'},
+      {'q': 'Patung tembaga raksasa Garuda Wisnu Kencana (GWK) di Bali merupakan mahakarya dari pematung...', 'opts': ['Edhi Sunarso', 'I Nyoman Nuarta', 'G. Sidharta', 'Dolorosa Sinaga'], 'ans': 'I Nyoman Nuarta', 'fact': 'Patung GWK setinggi 121 meter ini dibangun dengan merakit ribuan modul tembaga selama hampir 30 tahun.'},
+      {'q': 'Seniwati abstrak ekspresif asal Bandung yang lukisannya memecahkan rekor lelang termahal di Asia adalah...', 'opts': ['Arahmaiani', 'Christine Ay Tjoe', 'Dolorosa Sinaga', 'Mella Jaarsma'], 'ans': 'Christine Ay Tjoe', 'fact': 'Karya Christine sangat diincar kolektor global karena kedalaman eksplorasi emosi manusianya.'},
+      {'q': 'Seni kontemporer di mana tubuh senimannya sendiri menjadi medium utama karya di depan penonton disebut...', 'opts': ['Seni Patung', 'Performance Art', 'Seni Instalasi', 'Seni Kinetik'], 'ans': 'Performance Art', 'fact': 'Seniman performance art seperti Melati Suryodarmo sering melakukan aksi teatrikal ekstrem untuk menyampaikan pesan.'},
+      {'q': 'Pusat kesenian dan kebudayaan modern yang didirikan pada tahun 1968 oleh Gubernur Ali Sadikin di Jakarta adalah...', 'opts': ['Taman Mini (TMII)', 'Taman Ismail Marzuki', 'Gedung Kesenian Jakarta', 'Pasar Seni Ancol'], 'ans': 'Taman Ismail Marzuki', 'fact': 'TIM di Cikini menjadi kawah candradimuka bagi lahirnya banyak seniman rupa, film, dan teater legendaris.'},
+    ],
   };
 
   @override
@@ -294,7 +350,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
                     children: [
                       Text(titles[index], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : Colors.black)),
                       const SizedBox(height: 6),
-                      // TAMPILAN REWARD XP DI SINI
+                      // UI LAMA KAMU TETAP ADA DI SINI
                       Row(
                         children: [
                           Icon(isLocked ? LucideIcons.lock : LucideIcons.playCircle, size: 14, color: isLocked ? Colors.red : Colors.green),

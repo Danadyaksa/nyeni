@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GyroGameScreen extends StatefulWidget {
   const GyroGameScreen({super.key});
@@ -12,8 +14,6 @@ class GyroGameScreen extends StatefulWidget {
 }
 
 class _GyroGameScreenState extends State<GyroGameScreen> {
-  final _supabase = Supabase.instance.client;
-
   int? _selectedLevel;
   int _userMaxLevel = 1;
   bool _isLoading = true;
@@ -56,15 +56,24 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     super.dispose();
   }
 
+  // ==========================================
+  // LOAD PROGRESS DARI MYSQL / NODE.JS
+  // ==========================================
   Future<void> _loadUserProgress() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user != null) {
-        final data = await _supabase.from('users').select('completed_levels_labirin').eq('id', user.id).maybeSingle();
-        setState(() {
-          _userMaxLevel = data?['completed_levels_labirin'] ?? 1;
-          _isLoading = false;
-        });
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user_data');
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        final response = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          setState(() {
+            _userMaxLevel = data['completed_levels_labirin'] ?? 1;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error Load Labirin Progress: $e');
@@ -213,6 +222,9 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     return false;
   }
 
+  // ==========================================
+  // UPDATE PROGRESS KE MYSQL / NODE.JS
+  // ==========================================
   void _winGame() async {
     _isPlaying = false;
     _accelSubscription?.cancel();
@@ -221,48 +233,36 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     setState(() => _isProcessingResult = true);
 
     int currentLevel = _selectedLevel ?? 1;
-    // Hitung waktu yang dihabiskan
     int timeTaken = (_timeLimits[currentLevel] ?? 20) - _timeLeft;
 
     try {
-      final user = _supabase.auth.currentUser;
-      if (user != null) {
-        
-        // --- 1. SIMPAN REKOR WAKTU KE GAME_SCORES ---
-        final existingRecord = await _supabase
-            .from('game_scores')
-            .select('id, best_time')
-            .eq('user_id', user.id)
-            .eq('game_name', 'Labirin Gyro')
-            .eq('level', currentLevel)
-            .maybeSingle();
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user_data');
+      
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
 
-        if (existingRecord == null) {
-          // Belum pernah main level ini, cetak rekor baru
-          await _supabase.from('game_scores').insert({
-            'user_id': user.id,
-            'username': user.userMetadata?['full_name'] ?? 'Pemain Nyeni',
-            'game_name': 'Labirin Gyro',
-            'level': currentLevel,
-            'best_time': timeTaken,
-          });
-        } else {
-          // Udah pernah main, cek kalau lebih cepat, timpa!
-          int previousBest = existingRecord['best_time'];
-          if (timeTaken < previousBest) {
-            await _supabase.from('game_scores').update({
-              'best_time': timeTaken,
-            }).eq('id', existingRecord['id']);
-          }
-        }
+        // 1. Simpan Rekor Waktu ke Node.js (game_scores)
+        await http.post(
+          Uri.parse("http://10.0.2.2:3000/api/game/save-score"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "user_id": user['id'],
+            "username": user['full_name'] ?? 'Pemain Nyeni',
+            "game_name": "Labirin Gyro",
+            "level": currentLevel,
+            "best_time": timeTaken
+          })
+        );
 
-        // --- 2. KASIH XP & BUKA LEVEL DI USERS ---
-        final res = await _supabase.from('users').select('xp, level, completed_levels_labirin').eq('id', user.id).maybeSingle();
+        // 2. Ambil total_xp terbaru dari database
+        final res = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        final data = jsonDecode(res.body);
         
-        int currentXp = res?['xp'] ?? 0;
+        int currentXp = data['total_xp'] ?? 0;
         int newXp = currentXp + 100; // Reward sama 100 XP
         
-        // Logika Progresif Level (sama persis dengan trivia)
+        // Logika Progresif Level (Dipertahankan sesuai kodingan aslimu)
         int newLevel = 1;
         if (newXp >= 2700) newLevel = 10;
         else if (newXp >= 2200) newLevel = 9;
@@ -279,17 +279,23 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
           updatedCompletedLevel = _userMaxLevel + 1;
         }
 
-        await _supabase.from('users').update({
-          'xp': newXp,
-          'level': newLevel,
-          'completed_levels_labirin': updatedCompletedLevel
-        }).eq('id', user.id);
+        // 3. Update Progress ke Node.js (tabel users)
+        await http.post(
+          Uri.parse("http://10.0.2.2:3000/api/user/update-progress"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "id": user['id'],
+            "total_xp": newXp,
+            "level": newLevel,
+            "completed_levels_trivia": data['completed_levels_trivia'] ?? 1,
+            "completed_levels_labirin": updatedCompletedLevel
+          })
+        );
 
         setState(() { _userMaxLevel = updatedCompletedLevel; });
       }
     } catch (e) {
       debugPrint('Labirin Update Error: $e');
-      // Fallback lokal jika internet error
       setState(() {
         if (currentLevel == _userMaxLevel) {
           _userMaxLevel = _userMaxLevel + 1;
