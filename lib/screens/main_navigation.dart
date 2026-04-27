@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'login_screen.dart'; // Import halaman login
-import 'home_screen.dart'; // Import halaman home
+import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'map_screen.dart';
-import 'trivia_screen.dart';
 import 'games_screen.dart';
 import 'bagas_screen.dart';
 
@@ -21,39 +20,39 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _pages = [
     const ProfileScreen(), // Index 0
-    const MapScreen(), // Index 1
-    HomeScreen(), // Index 2
-    const GamesScreen(), // Index 3
+    const MapScreen(),     // Index 1
+    HomeScreen(),    // Index 2 (Pastikan HomeScreen sudah const/clean dari Supabase)
+    const GamesScreen(),   // Index 3
     const Center(child: Text('Halaman Menu Lainnya')), // Index 4
   ];
 
-  void _onItemTapped(int index) {
-    // 1. Buka brankas lokal kita
-    final box = Hive.box('nyeni_box');
-    
-    // 2. Cek status user. Kalau kosong, anggap saja dia 'guest' (tamu)
-    final role = box.get('role', defaultValue: 'guest');
+  // Fungsi ini sekarang async karena perlu cek SharedPreferences
+  void _onItemTapped(int index) async {
+    // 1. Cek token di SharedPreferences (Sistem Baru)
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('token');
 
-    // 3. Logika Cegatan! (Index 0 = Profil, Index 3 = Games)
-    if ((index == 0 || index == 3) && role == 'guest') {
-      // Munculkan peringatan kecil (SnackBar)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kamu harus login dulu untuk membuka fitur ini!'),
-          backgroundColor: Color(0xFF2C3E50),
-          duration: Duration(seconds: 2),
-        ),
-      );
+    // 2. Logika Cegatan untuk Profil (0) dan Games (3)
+    if ((index == 0 || index == 3) && token == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kamu harus login dulu untuk membuka fitur ini!'),
+            backgroundColor: Color(0xFF2C3E50),
+            duration: Duration(seconds: 2),
+          ),
+        );
 
-      // Lempar ke halaman Login
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-      return; // Hentikan fungsi di sini, jangan pindah tab di bawah
+        // Lempar ke halaman Login
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+      return; 
     }
 
-    // Kalau aman (sudah login atau klik menu yang tidak dikunci), pindah tab
+    // Kalau sudah login atau klik menu yang tidak dikunci (Home/Lokasi)
     setState(() {
       _selectedIndex = index;
     });
@@ -62,22 +61,24 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // HERO ERROR FIX: Tambahkan heroTag unik di sini
       floatingActionButton: FloatingActionButton(
+        heroTag: 'main_fab_bagas', // Mencegah error multiple heroes
         onPressed: () {
-          // Buka halaman chat AI saat tombol diklik
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const BagasScreen()),
           );
         },
-        backgroundColor: const Color(0xFF2C3E50), // Warna gelap khas Nyeni
+        backgroundColor: const Color(0xFF2C3E50),
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16), // Biar bentuknya agak kotak melengkung (squircle)
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(LucideIcons.bot, color: Colors.white, size: 28),
       ),
-      body: _pages[_selectedIndex],
+      body: IndexedStack( // Menggunakan IndexedStack agar state halaman tidak hilang saat pindah tab
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [

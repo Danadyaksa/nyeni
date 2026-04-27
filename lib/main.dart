@@ -1,31 +1,26 @@
-import 'screens/login_screen.dart';
-import 'screens/main_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-const supabaseUrl = 'https://yanzprnzegpffmfcspkp.supabase.co';
-const supabaseKey = 'sb_publishable_MP7-jhjcwXtwcuqnHOUA0g_Swrqpm2P';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/login_screen.dart';
+import 'screens/main_navigation.dart';
 
 void main() async {
+  // 1. Inisialisasi binding Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
-  
-  // 2. Inisialisasi Hive
+  // 2. Inisialisasi Hive (Untuk fitur Chat/Bagas kamu)
   await Hive.initFlutter();
-  
-  // Buka box untuk sesi/cache umum
   await Hive.openBox('nyeni_box'); 
-  // BUKA BOX KHUSUS BAGAS (Sangat Penting!)
   await Hive.openBox('bagas_chats'); 
 
-  // Cek apakah ada session Supabase yang masih aktif
-  final session = Supabase.instance.client.auth.currentSession;
+  // 3. Cek apakah ada session login lokal (SharedPreferences)
+  // Ini pengganti logic: Supabase.instance.client.auth.currentSession
+  final prefs = await SharedPreferences.getInstance();
+  final String? token = prefs.getString('token');
 
-  runApp(NyeniApp(isLoggedIn: session != null));
+  // Jika token tidak null, berarti user sudah login
+  runApp(NyeniApp(isLoggedIn: token != null));
 }
 
 class NyeniApp extends StatelessWidget {
@@ -43,7 +38,7 @@ class NyeniApp extends StatelessWidget {
         textTheme: GoogleFonts.outfitTextTheme(), 
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
-      // Gunakan logika isLoggedIn supaya tidak perlu login ulang
+      // Jika isLoggedIn true langsung ke MainNavigation, jika tidak ke LoginScreen
       home: isLoggedIn ? const MainNavigation() : const LoginScreen(), 
     );
   }
