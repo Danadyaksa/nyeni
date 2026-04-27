@@ -56,9 +56,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     super.dispose();
   }
 
-  // ======================================================
-  // UPDATE 1: Panggil completed_levels_labirin & maybeSingle
-  // ======================================================
   Future<void> _loadUserProgress() async {
     try {
       final user = _supabase.auth.currentUser;
@@ -77,29 +74,29 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
   final Map<int, List<String>> _mazes = {
     1: [
-      "WWWWWWWWWW", "WS.......W", "WWWWWWWW.W", "W........W", "W.WWWWWWWW",
-      "W........W", "WWWWWWWW.W", "W........W", "W.WWWWWWWW", "W........W",
-      "WWWWWWWW.W", "W........W", "W.WWWWWWWW", "W.......FW", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "W....W...W", "WWWW.W.W.W",
+      "W......W.W", "W.WWWWWW.W", "W.W......W", "W.W.WWWWWW", "W.W......W",
+      "W.WWWWWW.W", "W........W", "W.WWWWWWWW", "W.......FW", "WWWWWWWWWW",
     ],
     2: [
-      "WWWWWWWWWW", "WS..W....W", "W.W.W.WW.W", "W.W....W.W", "W.WWWW.W.W",
-      "W....W.W.W", "WWWW.W.W.W", "W....W...W", "W.WWWWWW.W", "WH.......W",
-      "W.WWWWWW.W", "W.W....W.W", "W.W.WW.W.W", "W.W.WH...F", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.......W", "W.WWWWWW.W", "W.W.H..W.W", "W.W.WW.W.W",
+      "W.W....W.W", "W.WWWW.W.W", "W.H....W.W", "WWWWWWWW.W", "W........W",
+      "W.WWWWWW.W", "W.W...HW.W", "W.W.WWWW.W", "W......WFW", "WWWWWWWWWW",
     ],
     3: [
-      "WWWWWWWWWW", "WS.......W", "W.WWWWWW.W", "W.WH...W.W", "W.W.WW.W.W",
-      "W.W..W.W.W", "W.WW.W.W.W", "W....W.W.W", "WWWWWW.W.W", "WH.....W.W",
-      "W.WWWWWW.W", "W.W.H..W.W", "W.W.WWWW.W", "W........F", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "W.HW.W...W", "W..W.W.W.W",
+      "WW.W.W.WHW", "W..W.W...W", "W.WWWWWW.W", "W........W", "W.WWWWWW.W",
+      "WHW....W.W", "W.W.WW.W.W", "W.W.WH.W.W", "W........F", "WWWWWWWWWW",
     ],
     4: [
-      "WWWWWWWWWW", "WS.W.H...W", "WW.W.WWW.W", "W..W.W...W", "W.WW.W.WHW",
-      "W....W.W.W", "WWWW.W.W.W", "WH...W...W", "W.WWWWWWWW", "W........W",
-      "W.WWWWWW.W", "W.WH...W.W", "W.WWWW.W.W", "W......WFW", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS.W.H...W", "W..W.WWW.W", "WH...W...W", "W.WWWW.W.W",
+      "W.H....W.W", "WWWWWW.W.W", "W......W.W", "W.WWWWWW.W", "W.W.H..W.W",
+      "W.W.WW.W.W", "W.H.W..W.H", "W.W.WWWWWW", "W........F", "WWWWWWWWWW",
     ],
     5: [
-      "WWWWWWWWWW", "WS.W...H.W", "WH.W.WWW.W", "W..W...W.W", "W.WWWW.W.W",
-      "W.H..W.W.W", "WWWW.W.W.W", "WH...W...W", "W.WWWWWWWW", "W.H......W",
-      "WWWWWWWW.W", "W.H....W.W", "W.WWWW.W.W", "W......WFW", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WS..H..H.W", "W.WWWWWW.W", "W......W.W", "WHWWWW.W.W",
+      "W.H....W.W", "W.WWWWWW.W", "W.W..H.W.W", "W.W.WW.W.W", "W.H.W..W.H",
+      "W.W.W.WW.W", "W.W...W..W", "W.WWWWW.WW", "WH......FW", "WWWWWWWWWW",
     ]
   };
 
@@ -216,9 +213,6 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     return false;
   }
 
-  // ======================================================
-  // UPDATE 2: Logika Waktu, Leaderboard (game_scores), dan RPG (users)
-  // ======================================================
   void _winGame() async {
     _isPlaying = false;
     _accelSubscription?.cancel();
@@ -263,23 +257,33 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
         }
 
         // --- 2. KASIH XP & BUKA LEVEL DI USERS ---
-        final res = await _supabase.from('users').select('total_xp, level, completed_levels_labirin').eq('id', user.id).maybeSingle();
+        final res = await _supabase.from('users').select('xp, level, completed_levels_labirin').eq('id', user.id).maybeSingle();
         
-        int currentXp = res?['total_xp'] ?? 0;
-        int newXp = currentXp + 100; // Dapat 100 XP dari labirin
-        int newLevel = (newXp ~/ 100) + 1;
+        int currentXp = res?['xp'] ?? 0;
+        int newXp = currentXp + 100; // Reward sama 100 XP
+        
+        // Logika Progresif Level (sama persis dengan trivia)
+        int newLevel = 1;
+        if (newXp >= 2700) newLevel = 10;
+        else if (newXp >= 2200) newLevel = 9;
+        else if (newXp >= 1750) newLevel = 8;
+        else if (newXp >= 1350) newLevel = 7;
+        else if (newXp >= 1000) newLevel = 6;
+        else if (newXp >= 700) newLevel = 5;
+        else if (newXp >= 450) newLevel = 4;
+        else if (newXp >= 250) newLevel = 3;
+        else if (newXp >= 100) newLevel = 2;
         
         int updatedCompletedLevel = _userMaxLevel;
         if (currentLevel == _userMaxLevel) {
           updatedCompletedLevel = _userMaxLevel + 1;
         }
 
-        await _supabase.from('users').upsert({
-          'id': user.id,
-          'total_xp': newXp,
+        await _supabase.from('users').update({
+          'xp': newXp,
           'level': newLevel,
           'completed_levels_labirin': updatedCompletedLevel
-        });
+        }).eq('id', user.id);
 
         setState(() { _userMaxLevel = updatedCompletedLevel; });
       }
@@ -463,73 +467,121 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
               width: boardWidth,
               height: boardHeight,
               decoration: BoxDecoration(
-                color: Colors.brown[50], 
+                color: const Color(0xFFFFF7ED), // Warna lantai labirin sedikit lebih hangat
                 border: Border.all(color: const Color(0xFF2C3E50), width: 4),
+                borderRadius: BorderRadius.circular(8),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 10))],
               ),
-              child: Stack(
-                children: [
-                  for (int r = 0; r < 15; r++)
-                    for (int c = 0; c < 10; c++)
-                      if (_currentMaze[r][c] == 'W')
-                        Positioned(
-                          left: c * _cellSize,
-                          top: r * _cellSize,
-                          child: Container(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Stack(
+                  children: [
+                    for (int r = 0; r < 15; r++)
+                      for (int c = 0; c < 10; c++)
+                        if (_currentMaze[r][c] == 'W')
+                          Positioned(
+                            left: c * _cellSize,
+                            top: r * _cellSize,
                             width: _cellSize,
                             height: _cellSize,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2C3E50), 
-                              border: Border.all(color: Colors.black12, width: 1),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2C3E50), 
+                                borderRadius: BorderRadius.circular(4), // Dinding agak melengkung
+                                border: Border.all(color: Colors.black26, width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 2,
+                                    offset: const Offset(2, 2)
+                                  )
+                                ]
+                              ),
+                            ),
+                          )
+                        else if (_currentMaze[r][c] == 'F')
+                          Positioned(
+                            left: c * _cellSize,
+                            top: r * _cellSize,
+                            width: _cellSize, // Posisinya diatur pakai width agar Center() akurat
+                            height: _cellSize, 
+                            child: Center(
+                              child: Container(
+                                width: _cellSize * 0.8,
+                                height: _cellSize * 0.8,
+                                decoration: BoxDecoration(
+                                  color: Colors.greenAccent, 
+                                  shape: BoxShape.circle, 
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  gradient: RadialGradient(
+                                    colors: [Colors.white, Colors.green.shade600],
+                                    center: Alignment.center,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.greenAccent.withOpacity(0.8), 
+                                      blurRadius: 10, 
+                                      spreadRadius: 2, 
+                                      offset: const Offset(0, 0) 
+                                    )
+                                  ]
+                                ),
+                                child: Icon(LucideIcons.flag, size: _cellSize * 0.4, color: Colors.white),
+                              ),
+                            ),
+                          )
+                        else if (_currentMaze[r][c] == 'H')
+                          Positioned(
+                            left: c * _cellSize,
+                            top: r * _cellSize,
+                            width: _cellSize, 
+                            height: _cellSize, 
+                            child: Center(
+                              child: Container(
+                                width: _cellSize * 0.7,
+                                height: _cellSize * 0.7,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                                  gradient: const RadialGradient(
+                                    colors: [Colors.black, Color(0xFF1A1A1A), Color(0xFF4A4A4A)],
+                                    stops: [0.0, 0.6, 1.0], // Efek kedalaman lubang (3D shadow dalam)
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 2, offset: const Offset(1, 1))
+                                  ]
+                                ),
+                              ),
                             ),
                           ),
-                        )
-                      else if (_currentMaze[r][c] == 'F')
-                        Positioned(
-                          left: c * _cellSize,
-                          top: r * _cellSize,
-                          child: Center(
-                            child: Container(
-                              width: _cellSize * 0.7,
-                              height: _cellSize * 0.7,
-                              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 5, spreadRadius: 1, offset: Offset(0, 2) )]),
-                            ),
-                          ),
-                        )
-                      else if (_currentMaze[r][c] == 'H')
-                        Positioned(
-                          left: c * _cellSize,
-                          top: r * _cellSize,
-                          child: Center(
-                            child: Container(
-                              width: _cellSize * 0.7,
-                              height: _cellSize * 0.7,
-                              decoration: const BoxDecoration(color: Colors.black87, shape: BoxShape.circle),
-                            ),
+
+                    // Bola Player
+                    Positioned(
+                      left: _ballX - _ballRadius,
+                      top: _ballY - _ballRadius,
+                      child: Container(
+                        width: _ballRadius * 2,
+                        height: _ballRadius * 2,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset: const Offset(2, 2))],
+                          gradient: const RadialGradient(
+                            colors: [Colors.white70, Colors.red, Colors.redAccent], 
+                            stops: [0.0, 0.4, 1.0],
+                            center: Alignment(-0.3, -0.3) // Efek kilapan cahaya pada bola
                           ),
                         ),
-
-                  Positioned(
-                    left: _ballX - _ballRadius,
-                    top: _ballY - _ballRadius,
-                    child: Container(
-                      width: _ballRadius * 2,
-                      height: _ballRadius * 2,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(2, 2))],
-                        gradient: const RadialGradient(colors: [Colors.red, Colors.redAccent], center: Alignment(-0.3, -0.3)),
                       ),
                     ),
-                  ),
-                  
-                  if (_isProcessingResult)
-                    Container(
-                      color: Colors.white.withOpacity(0.8),
-                      child: const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
-                    )
-                ],
+                    
+                    if (_isProcessingResult)
+                      Container(
+                        color: Colors.white.withOpacity(0.8),
+                        child: const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
+                      )
+                  ],
+                ),
               ),
             ),
           ),
