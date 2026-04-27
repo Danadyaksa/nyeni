@@ -4,31 +4,39 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// Ganti URL dan Anon Key ini dengan yang ada di dashboard Supabase kamu nanti
 const supabaseUrl = 'https://yanzprnzegpffmfcspkp.supabase.co';
 const supabaseKey = 'sb_publishable_MP7-jhjcwXtwcuqnHOUA0g_Swrqpm2P';
 
 void main() async {
-  // Wajib dipanggil kalau kita butuh inisialisasi sesuatu sebelum runApp
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Inisialisasi Supabase (Cloud Database)
+  await dotenv.load(fileName: ".env");
+
+  // 1. Inisialisasi Supabase
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseKey,
   );
 
-  // 2. Inisialisasi Hive (Local Storage)
+  // 2. Inisialisasi Hive
   await Hive.initFlutter();
-  // Kita bikin satu 'kotak' lokal bernama 'nyeni_box' buat nyimpen sesi & cache
+  
+  // Buka box untuk sesi/cache umum
   await Hive.openBox('nyeni_box'); 
+  // BUKA BOX KHUSUS BAGAS (Sangat Penting!)
+  await Hive.openBox('bagas_chats'); 
 
-  runApp(const NyeniApp());
+  // Cek apakah ada session Supabase yang masih aktif
+  final session = Supabase.instance.client.auth.currentSession;
+
+  runApp(NyeniApp(isLoggedIn: session != null));
 }
 
 class NyeniApp extends StatelessWidget {
-  const NyeniApp({super.key});
+  final bool isLoggedIn;
+  const NyeniApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +49,8 @@ class NyeniApp extends StatelessWidget {
         textTheme: GoogleFonts.outfitTextTheme(), 
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
-      // Untuk sementara kita arahkan home-nya ke LoginScreen yang bakal kita buat
-      home: const MainNavigation(), 
+      // Gunakan logika isLoggedIn supaya tidak perlu login ulang
+      home: isLoggedIn ? const MainNavigation() : const LoginScreen(), 
     );
   }
 }

@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // Murni pakai Hive
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BagasScreen extends StatefulWidget {
   const BagasScreen({super.key});
@@ -11,8 +13,8 @@ class BagasScreen extends StatefulWidget {
 }
 
 class _BagasScreenState extends State<BagasScreen> {
-  // TODO: Nanti ganti pakai API Key kamu sendiri
-  static const _apiKey = 'AIzaSyCYKKjwPkWj4If57kbzd1sMinqEw0RrKPY'; 
+  // API Key Kamu
+  final String _apiKey = dotenv.env['GEMINI_API_KEY'] ?? ''; 
   
   late final GenerativeModel _model;
   late final ChatSession _chat;
@@ -23,15 +25,19 @@ class _BagasScreenState extends State<BagasScreen> {
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
 
+  // Memanggil kotak Hive yang sudah dibuka di main.dart
+  final _myBox = Hive.box('bagas_chats');
+
   @override
   void initState() {
     super.initState();
     _initAI();
+    _loadChatHistory(); // Load chat lama saat halaman dibuka
   }
 
   void _initAI() {
     _model = GenerativeModel(
-      model: 'gemini-flash-latest',
+      model: 'gemini-flash-latest', // Sesuai model yang berhasil di laptopmu
       apiKey: _apiKey,
       systemInstruction: Content.system(
         'Nama kamu adalah BAGAS (Bot Asisten Galeri & Seni). '
@@ -42,13 +48,46 @@ class _BagasScreenState extends State<BagasScreen> {
         'PENTING: Jika pengguna bertanya di luar topik seni, budaya, atau aplikasi Nyeni (misalnya bertanya matematika, coding, politik, atau resep makanan), TOLAK dengan sopan dan ingatkan bahwa kamu hanya asisten kesenian.'
       ),
     );
+  }
 
-    _chat = _model.startChat();
+  // FUNGSI MEMUAT CHAT DARI HIVE & BIKIN AI INGAT KONTEKS
+  void _loadChatHistory() {
+    final savedData = _myBox.get('history');
     
-    _messages.add({
-      'isUser': false, 
-      'text': 'Halo! Aku BAGAS(Bot Asisten Galeri & Seni), asisten virtual Nyeni. Ada yang bisa aku bantu soal kesenian atau info pameran hari ini?'
-    });
+    if (savedData != null) {
+      final List<dynamic> decodedData = jsonDecode(savedData);
+      setState(() {
+        _messages.addAll(decodedData.map((e) => Map<String, dynamic>.from(e)).toList());
+      });
+
+      // Bikin AI ingat chat sebelumnya
+      List<Content> history = [];
+      for (var msg in _messages) {
+        if (msg['isUser']) {
+          history.add(Content.text(msg['text']));
+        } else {
+          history.add(Content.model([TextPart(msg['text'])]));
+        }
+      }
+      
+      _chat = _model.startChat(history: history);
+      _scrollToBottom();
+    } else {
+      // Jika belum ada chat sama sekali
+      setState(() {
+        _messages.add({
+          'isUser': false, 
+          'text': 'Halo! Aku BAGAS(Bot Asisten Galeri & Seni), asisten virtual Nyeni. Ada yang bisa aku bantu soal kesenian atau info pameran hari ini?'
+        });
+      });
+      _chat = _model.startChat();
+    }
+  }
+
+  // FUNGSI MENYIMPAN CHAT KE HIVE
+  Future<void> _saveChatToHive() async {
+    final jsonContent = jsonEncode(_messages);
+    await _myBox.put('history', jsonContent);
   }
 
   Future<void> _sendMessage() async {
@@ -56,28 +95,24 @@ class _BagasScreenState extends State<BagasScreen> {
     if (text.isEmpty) return;
 
     // ==========================================
-    // LOGIKA LIMITER (5 Pesan per 15 Menit)
+    // LOGIKA LIMITER (100% PAKAI HIVE)
     // ==========================================
-    final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     
-    // Ambil data memori lokal
-    final lastWindowStr = prefs.getString('bagas_time_window');
-    int msgCount = prefs.getInt('bagas_msg_count') ?? 0;
+    // Ambil data memori dari Hive
+    final lastWindowStr = _myBox.get('bagas_time_window');
+    int msgCount = _myBox.get('bagas_msg_count', defaultValue: 0);
 
-    // Tentukan waktu mulai jendela 15 menit
     DateTime windowStart = lastWindowStr != null ? DateTime.parse(lastWindowStr) : now;
 
-    // Jika sudah lewat 15 menit dari pesan pertama, reset hitungan!
-    if (now.difference(windowStart).inMinutes >= 10) {
+    // Reset hitungan jika sudah 15 menit
+    if (now.difference(windowStart).inMinutes >= 15) {
       windowStart = now;
       msgCount = 0;
     }
 
-    // Jika batas 5 pesan sudah tercapai
     if (msgCount >= 5) {
       int sisaWaktu = 15 - now.difference(windowStart).inMinutes;
-      // Pastikan sisa waktu tidak 0 jika pembulatannya mepet
       if (sisaWaktu <= 0) sisaWaktu = 1; 
 
       setState(() {
@@ -87,16 +122,15 @@ class _BagasScreenState extends State<BagasScreen> {
         });
       });
       _scrollToBottom();
-      return; // Stop pengiriman ke Gemini
+      return; 
     }
 
-    // Jika aman, update data penyimpanan lokal
+    // Update limit ke Hive
     msgCount++;
-    await prefs.setInt('bagas_msg_count', msgCount);
-    await prefs.setString('bagas_time_window', windowStart.toIso8601String());
+    await _myBox.put('bagas_msg_count', msgCount);
+    await _myBox.put('bagas_time_window', windowStart.toIso8601String());
     // ==========================================
 
-    // Lanjut kirim pesan
     setState(() {
       _messages.add({'isUser': true, 'text': text});
       _isLoading = true;
@@ -104,6 +138,9 @@ class _BagasScreenState extends State<BagasScreen> {
     
     _textController.clear();
     _scrollToBottom();
+    
+    // Simpan pertanyaan user ke memori hp
+    await _saveChatToHive();
 
     try {
       final response = await _chat.sendMessage(Content.text(text));
@@ -112,6 +149,10 @@ class _BagasScreenState extends State<BagasScreen> {
       setState(() {
         _messages.add({'isUser': false, 'text': responseText ?? 'Maaf, BAGAS lagi error nih.'});
       });
+      
+      // Simpan jawaban BAGAS ke memori hp
+      await _saveChatToHive();
+      
     } catch (e) {
       setState(() {
         _messages.add({'isUser': false, 'text': 'Waduh, koneksi ke otak BAGAS terputus. Coba cek internetmu ya! Error: $e'});
@@ -153,6 +194,23 @@ class _BagasScreenState extends State<BagasScreen> {
         centerTitle: true,
         elevation: 1,
         iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+        actions: [
+          // TOMBOL HAPUS CHAT
+          IconButton(
+            icon: const Icon(LucideIcons.trash2, color: Colors.redAccent),
+            tooltip: 'Hapus Obrolan',
+            onPressed: () async {
+              await _myBox.clear(); // Bersihkan memori Hive
+              setState(() {
+                _messages.clear();
+                _messages.add({
+                  'isUser': false, 
+                  'text': 'Riwayat obrolan dibersihkan. Ada yang mau ditanyakan lagi?'
+                });
+              });
+            },
+          )
+        ],
       ),
       body: Column(
         children: [
