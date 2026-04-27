@@ -12,7 +12,7 @@ class BagasScreen extends StatefulWidget {
 
 class _BagasScreenState extends State<BagasScreen> {
   // TODO: Nanti ganti pakai API Key kamu sendiri
-  static const _apiKey = 'AIzaSyAuPu1yjUkCIIxAMWLU6WJD42O-RsebJ5c'; 
+  static const _apiKey = 'AIzaSyCYKKjwPkWj4If57kbzd1sMinqEw0RrKPY'; 
   
   late final GenerativeModel _model;
   late final ChatSession _chat;
@@ -31,7 +31,7 @@ class _BagasScreenState extends State<BagasScreen> {
 
   void _initAI() {
     _model = GenerativeModel(
-      model: 'gemini-pro',
+      model: 'gemini-flash-latest',
       apiKey: _apiKey,
       systemInstruction: Content.system(
         'Nama kamu adalah BAGAS (Bot Asisten Galeri & Seni). '
