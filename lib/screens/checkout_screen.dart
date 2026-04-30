@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event_model.dart';
+import '../services/auth_service.dart';
 import 'main_navigation.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -14,15 +16,30 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _supabase = Supabase.instance.client;
-  String _selectedPayment = 'QRIS'; // Default pilihan
+  String _selectedPayment = 'QRIS'; 
   bool _isProcessing = false;
 
-  // Mengambil data user yang sedang login dari Supabase, dengan fallback nama 'Aksa'
-  String get _userName => _supabase.auth.currentUser?.userMetadata?['full_name'] ?? "Aksa";
-  String get _userEmail => _supabase.auth.currentUser?.email ?? "aksa@email.com";
+  String _userName = "Aksa";
+  String _userEmail = "aksa@email.com";
 
-  // TAHAP 1: Munculkan Dialog Instruksi Bayar (QRIS / BCA)
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userDataString = prefs.getString('user_data');
+    if (userDataString != null) {
+      final userData = jsonDecode(userDataString);
+      setState(() {
+        _userName = userData['full_name'] ?? "Aksa";
+        _userEmail = userData['email'] ?? "aksa@email.com";
+      });
+    }
+  }
+
   void _showPaymentInstructionDialog() {
     showDialog(
       context: context,
@@ -35,14 +52,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const Text('Instruksi Pembayaran', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             
-            // Logika Tampilan Berdasarkan Metode
             if (_selectedPayment == 'QRIS') ...[
               const Text('Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet kamu.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(16)),
-                // TODO: Nanti gambarnya bisa diganti pakai Image.asset('assets/qris_asli.png') kalau gambarnya udah ada
                 child: const Column(
                   children: [
                     Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF2C3E50)),
@@ -65,13 +80,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
             const SizedBox(height: 24),
             
-            // Tombol "Saya Sudah Bayar"
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Tutup dialog instruksi
-                  _submitPaymentProof();  // Lanjut proses kirim status 'pending'
+                  Navigator.pop(context); 
+                  _submitPaymentProof();  
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2C3E50),
@@ -91,57 +105,84 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // TAHAP 2: Proses Data ke Database & Munculkan Status "Menunggu Admin"
+  // TAHAP 2: Bikin dialog PENDING baru buat nahan user
+  void _showPendingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.clock, color: Colors.orange, size: 70), 
+            const SizedBox(height: 16),
+            const Text('Menunggu Verifikasi', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text(
+              'Pesanan lu udah masuk bos. Pembayaran lagi dicek Admin. Kalo udah di-acc, tiket otomatis aktif di menu Profile ye!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, height: 1.5, fontSize: 13),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Lempar balik ke Home/MainNavigation
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MainNavigation()),
+                    (route) => false,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C3E50),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // TAHAP 3: Proses nembak API Express 
   void _submitPaymentProof() async {
     setState(() => _isProcessing = true);
-    
-    // Simulasi proses upload bukti/update database status menjadi 'Pending'
-    await Future.delayed(const Duration(seconds: 2));
-    
-    setState(() => _isProcessing = false);
 
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(LucideIcons.clock, color: Colors.orange, size: 70), // Ikon Jam
-              const SizedBox(height: 16),
-              const Text('Menunggu Verifikasi', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text(
-                'Pembayaran kamu sedang dicek oleh Admin. Tiket akan otomatis aktif setelah admin menyetujuinya.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, height: 1.5, fontSize: 13),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Balik ke home
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainNavigation()),
-                      (route) => false,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final prefs = await SharedPreferences.getInstance();
+    final userDataString = prefs.getString('user_data');
+
+    if (userDataString != null) {
+      final userData = jsonDecode(userDataString);
+      final String userId = userData['id'];
+
+      final response = await AuthService().buyTicket(
+        userId,
+        widget.event.title,
+        widget.event.date,
       );
+
+      setState(() => _isProcessing = false);
+
+      // Cek ticket_id aja, karena status PENDING belom dapet qr_data
+    if (response.containsKey('ticket_id')) {
+        // Cari ticket_id, bukan qr_data!
+        setState(() => _isProcessing = false);
+        if (mounted) {
+          _showPendingDialog(); // Munculin pop-up jam oren nunggu admin
+        }
+      } else {
+        // Biar kaga keluar "null", kasih fallback text
+        String errorMsg = response['error'] ?? "Ada masalah di server nih pak";
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Yah gagal pesen tiket: $errorMsg")),
+        );
+      }
     }
   }
 
@@ -164,7 +205,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. INFO EVENT
             _buildCard(
               child: Row(
                 children: [
@@ -304,7 +344,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ]),
         ),
         ElevatedButton(
-          onPressed: _isProcessing ? null : _showPaymentInstructionDialog, // <-- Berubah memanggil instruksi bayar
+          onPressed: _isProcessing ? null : _showPaymentInstructionDialog,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2C3E50),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'ticket_detail_screen.dart'; // Wajib ada buat lempar QR
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   late TabController _tabController;
   
   Map<String, dynamic>? _userData;
+  List<dynamic> _tickets = []; // Nampung daftar tiket dari API
   bool _isLoading = true;
   bool _isUploadingImage = false;
 
@@ -30,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _fetchUserData();
   }
 
-  // AMBIL DATA TERBARU DARI NODE.JS (Termasuk Data XP dari Game)
+  // AMBIL DATA TERBARU DARI NODE.JS & DATA TIKET
   Future<void> _fetchUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -39,15 +41,20 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       if (userString != null) {
         final localUser = jsonDecode(userString);
         
-        // 10.0.2.2 adalah localhost-nya Emulator Android
+        // Tarik data profil (Level, XP, Avatar)
         final response = await http.get(
           Uri.parse("http://10.0.2.2:3000/api/user/${localUser['id']}"),
         ).timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           final freshData = jsonDecode(response.body);
+          
+          // Sekalian tarik data tiket pake AuthService kita
+          final tickets = await _authService.getMyTickets(freshData['id']);
+
           setState(() {
             _userData = freshData;
+            _tickets = tickets;
           });
           // Update data lokal biar sinkron
           await prefs.setString('user_data', jsonEncode(freshData));
@@ -80,7 +87,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        // Tarik ulang profil untuk mendapatkan URL gambar baru
         await _fetchUserData(); 
         if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Foto profil berhasil diperbarui!')));
       } else {
@@ -116,7 +122,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   headers: {"Content-Type": "application/json"},
                   body: jsonEncode({"id": _userData!['id'], "full_name": nameController.text.trim()}),
                 );
-                // Langsung refresh nama baru
                 await _fetchUserData();
               } catch (e) {
                 debugPrint("Error Update Name: $e");
@@ -136,14 +141,145 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return Colors.amber.shade500;
   }
 
+  // WIDGET BANTUAN BUAT BIKIN LIST TIKET DI TIAP TAB
+  Widget _buildTicketList(String statusFilter) {
+    final filteredTickets = _tickets.where((t) => t['status'] == statusFilter).toList();
+
+    if (filteredTickets.isEmpty) {
+      return Center(child: Text("Kaga ada tiket $statusFilter nih pak", style: const TextStyle(color: Colors.grey)));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredTickets.length,
+      itemBuilder: (context, index) {
+        final ticket = filteredTickets[index];
+        return InkWell( // <--- SEKARANG FULL CARD BISA DIKLIK!
+          onTap: () {
+            if (statusFilter == 'ACTIVE') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TicketDetailScreen(
+                    qrData: ticket['id'],
+                    eventName: ticket['event_name'],
+                  ),
+                ),
+              );
+            } else if (statusFilter == 'PENDING') {
+              // Kalo pending diklik, munculin detailnya
+              _showPendingDetails(ticket);
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+            ),
+            child: Row(
+              children: [
+                // GAMBAR THUMBNAIL TIKET BIAR KAGA NGANTUK
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    'https://images.unsplash.com/photo-1540039155733-d7696d4f198f?q=80&w=200&auto=format&fit=crop', // Gambar Konser Dummy
+                    width: 80, height: 80, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(width: 80, height: 80, color: Colors.grey[200], child: const Icon(LucideIcons.imageOff)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(ticket['event_name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text(ticket['event_date'], style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      // BADGE STATUS
+                      if (statusFilter == 'PENDING')
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                          child: const Text("Menunggu Verifikasi", style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+                        )
+                      else if (statusFilter == 'ACTIVE')
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                          child: const Text("Tiket Aktif", style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+                        )
+                    ],
+                  ),
+                ),
+                const Icon(LucideIcons.chevronRight, color: Colors.grey),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // FUNGSI BUAT MUNCULIN POP-UP DETAIL PENDING (Taruh di dalem class _ProfileScreenState)
+  void _showPendingDetails(dynamic ticket) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(child: Icon(LucideIcons.clock, color: Colors.orange, size: 50)),
+            const SizedBox(height: 16),
+            const Center(child: Text("Detail Pembayaran", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+            const SizedBox(height: 24),
+            _buildDetailRow("Acara", ticket['event_name']),
+            _buildDetailRow("Tanggal", ticket['event_date']),
+            _buildDetailRow("Status", "Menunggu Verifikasi Admin"),
+            // Ini hardcode dlu krn database lu belom nyimpen metode pembayarannye
+            _buildDetailRow("Metode Pembayaran", "QRIS / Transfer Virtual"), 
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3E50), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: const Text("Tutup", style: TextStyle(color: Colors.white)),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    // Ambil total_xp (disesuaikan dengan nama kolom database yang baru)
     int totalXp = _userData?['total_xp'] ?? 0;
     
-    // Logika Leveling Progresif
     int currentLevel = 1;
     int xpForCurrent = 0;
     int xpForNext = 100;
@@ -170,7 +306,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         elevation: 0, 
         backgroundColor: Colors.white,
         actions: [
-          // TOMBOL REFRESH UNTUK UPDATE XP SETELAH MAIN GAME
           IconButton(
             icon: const Icon(LucideIcons.refreshCw, color: Colors.black),
             onPressed: () {
@@ -199,7 +334,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       child: CircleAvatar(
                         radius: 40, 
                         backgroundColor: Colors.grey[200], 
-                        // Konversi URL 'localhost' dari MySQL agar bisa terbaca oleh Emulator Android (10.0.2.2)
                         backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl.replaceFirst('localhost', '10.0.2.2')) : null, 
                         child: avatarUrl == null 
                           ? const Icon(LucideIcons.user, size: 40, color: Colors.grey) 
@@ -232,11 +366,31 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             ),
           ),
           const SizedBox(height: 8),
+          
+          // TAB MENU
           Container(
             color: Colors.white,
-            child: TabBar(controller: _tabController, labelColor: const Color(0xFF2C3E50), unselectedLabelColor: Colors.grey, indicatorColor: const Color(0xFF2C3E50), tabs: const [Tab(text: "Pending"), Tab(text: "Aktif"), Tab(text: "Riwayat")]),
+            child: TabBar(
+              controller: _tabController, 
+              labelColor: const Color(0xFF2C3E50), 
+              unselectedLabelColor: Colors.grey, 
+              indicatorColor: const Color(0xFF2C3E50), 
+              tabs: const [Tab(text: "Pending"), Tab(text: "Aktif"), Tab(text: "Riwayat")]
+            ),
           ),
-          Expanded(child: TabBarView(controller: _tabController, children: [const Center(child: Text("Kosong")), const Center(child: Text("Kosong")), const Center(child: Text("Kosong"))])),
+          
+          // TAB CONTENT (Menampilkan List Tiket)
+          Expanded(
+            child: TabBarView(
+              controller: _tabController, 
+              children: [
+                _buildTicketList('PENDING'), 
+                _buildTicketList('ACTIVE'),  
+                _buildTicketList('USED'),    
+              ]
+            )
+          ),
+          
           ListTile(
             leading: const Icon(LucideIcons.logOut, color: Colors.red), 
             title: const Text("Keluar", style: TextStyle(color: Colors.red)), 

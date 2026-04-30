@@ -1,4 +1,5 @@
 class Event {
+  final int id;
   final String title;
   final String organizer;
   final String date;
@@ -7,6 +8,7 @@ class Event {
   final String category;
 
   Event({
+    required this.id,
     required this.title,
     required this.organizer,
     required this.date,

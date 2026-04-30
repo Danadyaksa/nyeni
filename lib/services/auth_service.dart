@@ -41,6 +41,23 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> buyTicket(String userId, String eventName, String eventDate) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/tickets/checkout"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "user_id": userId,
+          "event_name": eventName,
+          "event_date": eventDate
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"error": "Koneksi server gagal: $e"};
+    }
+  }
+
   // UPDATE PROGRESS (Untuk Game Trivia & Labirin)
   Future<bool> updateProgress({
     required String userId,
@@ -71,5 +88,42 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+
+  Future<List<dynamic>> getMyTickets(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/tickets/my-tickets/$userId"),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print("Error narik tiket: $e");
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getAllEvents() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/events"));
+      return response.statusCode == 200 ? jsonDecode(response.body) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Narik 1 event buat di halaman detail
+  Future<Map<String, dynamic>?> getEventDetail(int id) async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/events/$id"));
+      return response.statusCode == 200 ? jsonDecode(response.body) : null;
+    } catch (e) {
+      return null;
+    }
   }
 }
