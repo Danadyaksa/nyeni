@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
+
 
 class GyroGameScreen extends StatefulWidget {
   const GyroGameScreen({super.key});
@@ -65,7 +67,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
       final userStr = prefs.getString('user_data');
       if (userStr != null) {
         final user = jsonDecode(userStr);
-        final response = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        final response = await http.get(Uri.parse("${AuthService.baseUrl}/user/${user['id']}"));
         
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -244,7 +246,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
         // 1. Simpan Rekor Waktu ke Node.js (game_scores)
         await http.post(
-          Uri.parse("http://10.0.2.2:3000/api/game/save-score"),
+          Uri.parse("${AuthService.baseUrl}/game/save-score"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "user_id": user['id'],
@@ -256,7 +258,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
         );
 
         // 2. Ambil total_xp terbaru dari database
-        final res = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        final res = await http.get(Uri.parse("${AuthService.baseUrl}/user/${user['id']}"));
         final data = jsonDecode(res.body);
         
         int currentXp = data['total_xp'] ?? 0;
@@ -281,7 +283,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
         // 3. Update Progress ke Node.js (tabel users)
         await http.post(
-          Uri.parse("http://10.0.2.2:3000/api/user/update-progress"),
+          Uri.parse("${AuthService.baseUrl}/user/update-progress"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "id": user['id'],

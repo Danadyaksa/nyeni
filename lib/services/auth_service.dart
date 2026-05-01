@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   // Gunakan 10.0.2.2 untuk emulator, atau IP laptopmu jika pakai HP fisik
-  final String baseUrl = "http://10.0.2.2:3000/api";
+  static const String baseUrl = "http://192.168.18.85:3000/api";
 
   // LOGIN
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -41,7 +41,15 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> buyTicket(String userId, String eventName, String eventDate) async {
+  Future<Map<String, dynamic>> buyTicket(
+    String userId,
+    String eventName,
+    String eventDate, {
+    int uniqueCode = 0,
+    int serviceFee = 2500,
+    int ticketPrice = 0,
+    int totalAmount = 0,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/tickets/checkout"),
@@ -49,7 +57,44 @@ class AuthService {
         body: jsonEncode({
           "user_id": userId,
           "event_name": eventName,
-          "event_date": eventDate
+          "event_date": eventDate,
+          "unique_code": uniqueCode,
+          "service_fee": serviceFee,
+          "ticket_price": ticketPrice,
+          "total_amount": totalAmount,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"error": "Koneksi server gagal: $e"};
+    }
+  }
+
+  /// Buat N tiket sekaligus — masing-masing dapat UUID & QR unik sendiri.
+  /// Biaya layanan (service_fee) flat per transaksi, bukan per tiket.
+  Future<Map<String, dynamic>> buyTickets({
+    required String userId,
+    required String eventName,
+    required String eventDate,
+    required int count,
+    int uniqueCode = 0,
+    int serviceFee = 2500,
+    int ticketPrice = 0,
+    int totalAmount = 0,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/tickets/checkout-bulk"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "user_id": userId,
+          "event_name": eventName,
+          "event_date": eventDate,
+          "count": count,
+          "unique_code": uniqueCode,
+          "service_fee": serviceFee,   // flat per transaksi
+          "ticket_price": ticketPrice, // harga per tiket
+          "total_amount": totalAmount, // total keseluruhan
         }),
       );
       return jsonDecode(response.body);

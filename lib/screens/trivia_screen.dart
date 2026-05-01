@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 
 class TriviaScreen extends StatefulWidget {
   const TriviaScreen({super.key});
@@ -33,7 +34,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
       final userStr = prefs.getString('user_data');
       if (userStr != null) {
         final user = jsonDecode(userStr);
-        final response = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+        final response = await http.get(Uri.parse("${AuthService.baseUrl}/user/${user['id']}"));
         
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -183,7 +184,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
           final user = jsonDecode(userStr);
           
           // Ambil data terbaru
-          final res = await http.get(Uri.parse("http://10.0.2.2:3000/api/user/${user['id']}"));
+          final res = await http.get(Uri.parse("${AuthService.baseUrl}/user/${user['id']}"));
           final data = jsonDecode(res.body);
           
           int currentXp = data['total_xp'] ?? 0;
@@ -204,7 +205,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
 
           // UPDATE KE DATABASE MYSQL
           await http.post(
-            Uri.parse("http://10.0.2.2:3000/api/user/update-progress"),
+            Uri.parse("${AuthService.baseUrl}/user/update-progress"),
             headers: {"Content-Type": "application/json"},
             body: jsonEncode({
               "id": user['id'],
@@ -250,7 +251,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
       {'q': 'Rumah adat berbentuk limas di Sumatera Selatan disebut...', 'opts': ['Rumah Gadang', 'Rumah Limas', 'Joglo', 'Honai'], 'ans': 'Rumah Limas', 'fact': 'Lantai berjenjang di Rumah Limas digunakan untuk membedakan status sosial tamu.'},
       {'q': 'Suku di Papua yang terkenal dengan seni ukir kayunya adalah...', 'opts': ['Dani', 'Asmat', 'Biak', 'Sentani'], 'ans': 'Asmat', 'fact': 'Mereka percaya nenek moyang tercipta dari patung kayu pahatan dewa.'},
       {'q': 'Senjata tradisional Jawa yang diakui UNESCO adalah...', 'opts': ['Keris', 'Kujang', 'Rencong', 'Mandau'], 'ans': 'Keris', 'fact': 'Keris diakui sebagai mahakarya seni kriya logam dan nilai spiritual tinggi.'},
-      {'q': 'Batik yang dibuat dengan canting disebut batik...', 'opts': ['Cap', 'Tulis', 'Printing', 'Ikat'], 'ans': 'Batik Tulis', 'fact': 'Batik tulis membutuhkan ketelitian manual hingga waktu bulan-bulanan.'},
+      {'q': 'Batik yang dibuat dengan canting disebut batik...', 'opts': ['Cap', 'Tulis', 'Printing', 'Ikat'], 'ans': 'Tulis', 'fact': 'Batik tulis membutuhkan ketelitian manual hingga waktu bulan-bulanan.'},
       {'q': 'Pusat gerabah di Yogyakarta berada di desa...', 'opts': ['Kotagede', 'Kasongan', 'Manding', 'Bantul'], 'ans': 'Kasongan', 'fact': 'Kasongan adalah sentra kerajinan tanah liat dan elemen dekorasi.'},
       {'q': 'Alat untuk membatik disebut...', 'opts': ['Sudi', 'Canting', 'Pahat', 'Kuas'], 'ans': 'Canting', 'fact': 'Canting adalah alat dari tembaga untuk menampung dan menorehkan malam (lilin) panas.'},
       {'q': 'Motif batik Parang dulunya hanya boleh dipakai oleh...', 'opts': ['Petani', 'Pedagang', 'Keluarga Raja', 'Prajurit'], 'ans': 'Keluarga Raja', 'fact': 'Motif parang termasuk motif larangan yang dikhususkan bagi bangsawan kraton.'},

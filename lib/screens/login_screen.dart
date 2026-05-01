@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'register_screen.dart';
 import 'main_navigation.dart';
+import 'admin_dashboard_screen.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -35,10 +36,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result['token'] != null) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
+        // Cek role user — kalau admin, lempar ke AdminDashboard
+        final role = result['user']?['role'] ?? 'user';
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainNavigation()),
+          );
+        }
       }
     } else {
       if (mounted) {

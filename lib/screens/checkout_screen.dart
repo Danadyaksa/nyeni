@@ -22,10 +22,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _userName = "Aksa";
   String _userEmail = "aksa@email.com";
 
+  // Kode unik 3 digit — di-generate sekali saat halaman dibuka
+  late final int _uniqueCode;
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    // Random 1–999, padded jadi 3 digit (misal: 052)
+    _uniqueCode = 1 + (DateTime.now().millisecondsSinceEpoch % 999);
   }
 
   Future<void> _loadUserData() async {
@@ -41,69 +46,142 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _showPaymentInstructionDialog() {
+    int priceInt = int.parse(widget.event.price.replaceAll(RegExp(r'[^0-9]'), ''));
+    int subtotal = priceInt * widget.count;
+    const int serviceFee = 2500;
+    int totalSebelumKode = subtotal + serviceFee;
+    int total = totalSebelumKode + _uniqueCode;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Instruksi Pembayaran', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            
-            if (_selectedPayment == 'QRIS') ...[
-              const Text('Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet kamu.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Instruksi Pembayaran', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
+
+              if (_selectedPayment == 'QRIS') ...[
+                const Text('Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet kamu.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(16)),
+                  child: const Column(
+                    children: [
+                      Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF2C3E50)),
+                      SizedBox(height: 8),
+                      Text("QRIS NYENI INDONESIA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const Text('Transfer tepat sesuai nominal ke rekening BCA berikut:', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                  child: const Text("880123456789", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: 2, color: Color(0xFF2C3E50))),
+                ),
+                const SizedBox(height: 8),
+                const Text('a.n. PT Nyeni Indonesia', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              ],
+
+              const SizedBox(height: 20),
+
+              // Rincian nominal transfer
               Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(16)),
-                child: const Column(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C3E50).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2C3E50).withOpacity(0.2)),
+                ),
+                child: Column(
                   children: [
-                    Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF2C3E50)),
-                    SizedBox(height: 8),
-                    Text("QRIS NYENI INDONESIA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    _buildDialogPriceRow('Subtotal', totalSebelumKode),
+                    const SizedBox(height: 4),
+                    _buildDialogPriceRow('Kode Unik', _uniqueCode, isCode: true),
+                    const Divider(height: 16),
+                    _buildDialogPriceRow('Total Transfer', total, isBold: true),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.alertCircle, size: 13, color: Colors.orange),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Transfer TEPAT Rp ${_formatRp(total)}',
+                            style: const TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ] else ...[
-              const Text('Transfer tepat sesuai nominal ke rekening BCA berikut:', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                child: const Text("880123456789", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: 2, color: Color(0xFF2C3E50))),
-              ),
-              const SizedBox(height: 8),
-              const Text('a.n. PT Nyeni Indonesia', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-            ],
 
-            const SizedBox(height: 24),
-            
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); 
-                  _submitPaymentProof();  
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); 
+                    _submitPaymentProof();  
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C3E50),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Saya Sudah Bayar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-                child: const Text('Saya Sudah Bayar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-            )
-          ],
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+              )
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildDialogPriceRow(String label, int val, {bool isBold = false, bool isCode = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(
+          fontSize: 13,
+          color: isBold ? Colors.black87 : Colors.grey[700],
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+        )),
+        Text(
+          isCode ? '+${val.toString().padLeft(3, '0')}' : 'Rp ${_formatRp(val)}',
+          style: TextStyle(
+            fontSize: isBold ? 15 : 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            color: isCode ? Colors.orange : (isBold ? const Color(0xFF2C3E50) : Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatRp(int val) =>
+      val.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
 
   // TAHAP 2: Bikin dialog PENDING baru buat nahan user
   void _showPendingDialog() {
@@ -150,7 +228,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // TAHAP 3: Proses nembak API Express 
+  // TAHAP 3: Proses nembak API Express — buat N tiket sekaligus (1 per count)
   void _submitPaymentProof() async {
     setState(() => _isProcessing = true);
 
@@ -161,27 +239,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final userData = jsonDecode(userDataString);
       final String userId = userData['id'];
 
-      final response = await AuthService().buyTicket(
-        userId,
-        widget.event.title,
-        widget.event.date,
+      int priceInt = int.parse(widget.event.price.replaceAll(RegExp(r'[^0-9]'), ''));
+      int subtotal = priceInt * widget.count;
+      const int serviceFee = 2500; // flat per transaksi, bukan per tiket
+      int total = subtotal + serviceFee + _uniqueCode;
+
+      // Buat tiket sebanyak widget.count — masing-masing dapat QR unik sendiri
+      final response = await AuthService().buyTickets(
+        userId: userId,
+        eventName: widget.event.title,
+        eventDate: widget.event.date,
+        count: widget.count,
+        uniqueCode: _uniqueCode,
+        serviceFee: serviceFee,
+        ticketPrice: priceInt,
+        totalAmount: total,
       );
 
       setState(() => _isProcessing = false);
 
-      // Cek ticket_id aja, karena status PENDING belom dapet qr_data
-    if (response.containsKey('ticket_id')) {
-        // Cari ticket_id, bukan qr_data!
-        setState(() => _isProcessing = false);
-        if (mounted) {
-          _showPendingDialog(); // Munculin pop-up jam oren nunggu admin
-        }
+      if (response['success'] == true) {
+        if (mounted) _showPendingDialog();
       } else {
-        // Biar kaga keluar "null", kasih fallback text
         String errorMsg = response['error'] ?? "Ada masalah di server nih pak";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Yah gagal pesen tiket: $errorMsg")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Yah gagal pesen tiket: $errorMsg")),
+          );
+        }
       }
     }
   }
@@ -190,7 +275,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     int priceInt = int.parse(widget.event.price.replaceAll(RegExp(r'[^0-9]'), ''));
     int subtotal = priceInt * widget.count;
-    int total = subtotal + 2500;
+    const int serviceFee = 2500;
+    int totalSebelumKode = subtotal + serviceFee;
+    int total = totalSebelumKode + _uniqueCode; // total transfer = subtotal + biaya layanan + kode unik
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
@@ -249,9 +336,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   _buildPriceRow("Harga Satuan", priceInt),
                   _buildPriceRow("Jumlah", widget.count, isQty: true),
-                  _buildPriceRow("Biaya Layanan", 2500),
+                  _buildPriceRow("Biaya Layanan", serviceFee),
+                  _buildPriceRow("Kode Unik", _uniqueCode, isCode: true),
                   const Divider(height: 32),
-                  _buildPriceRow("Total Bayar", total, isBold: true),
+                  _buildPriceRow("Total Transfer", total, isBold: true),
                 ],
               ),
             ),
@@ -317,15 +405,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPriceRow(String label, int val, {bool isBold = false, bool isQty = false}) => Padding(
+  Widget _buildPriceRow(String label, int val, {bool isBold = false, bool isQty = false, bool isCode = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: isBold ? Colors.black : Colors.grey)),
+        Row(
+          children: [
+            Text(label, style: TextStyle(color: isBold ? Colors.black : Colors.grey)),
+            if (isCode) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                child: const Text('untuk identifikasi', style: TextStyle(fontSize: 9, color: Colors.orange)),
+              ),
+            ],
+          ],
+        ),
         Text(
-          isQty ? "x$val" : "Rp ${val.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: isBold ? 17 : 14, color: isBold ? const Color(0xFF2C3E50) : Colors.black),
+          isQty ? "x$val" : (isCode ? "+${val.toString().padLeft(3, '0')}" : "Rp ${_formatRp(val)}"),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: isBold ? 17 : 14,
+            color: isCode ? Colors.orange : (isBold ? const Color(0xFF2C3E50) : Colors.black),
+          ),
         ),
       ],
     ),
@@ -338,8 +442,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         Expanded(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text("Total Tagihan", style: TextStyle(fontSize: 12, color: Colors.grey)),
-            Text("Rp ${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}", 
+            const Text("Total Transfer", style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text("Rp ${_formatRp(total)}", 
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
           ]),
         ),

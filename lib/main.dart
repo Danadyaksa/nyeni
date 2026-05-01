@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // 1. TAMBAHKAN IMPORT INI
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
   await Hive.initFlutter();
-  await Hive.openBox('nyeni_box'); 
-  await Hive.openBox('bagas_chats'); 
+  await Hive.openBox('nyeni_box');
+  await Hive.openBox('bagas_chats');
+  await Hive.openBox('notifications');
 
-  // Tidak perlu cek token di sini lagi karena sudah di-handle di MainNavigation
+  // Init notification service
+  await NotificationService().init();
+
   runApp(const NyeniApp());
 }
 

@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/auth_service.dart';
-import 'event_detail_screen.dart'; // Pastiin file ini udah lu bikin ye pak!
+import '../services/notification_service.dart';
+import 'event_detail_screen.dart';
+import 'notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'Semua';
   String _userName = "User";
   final List<String> _categories = ['Semua', 'Konser', 'Teater', 'Pameran', 'Stand Up'];
+  int _unreadNotifCount = 0;
+  final _notifService = NotificationService();
 
   final List<String> _promoBanners = [
     'https://images.unsplash.com/photo-1540039155733-d7696d4f198f?q=80&w=800&auto=format&fit=crop',
@@ -35,9 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserData();
-    _fetchEvents(); // Narik data pas layar dibuka
-    
-    // Settingan banner jalan otomatis
+    _fetchEvents();
+    _refreshNotifCount();
+    // Jalankan daily checks saat home dibuka
+    NotificationService().runDailyChecks();
+
     _pageController = PageController();
     _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
       if (_currentBannerIndex < _promoBanners.length - 1) {
@@ -52,6 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
           curve: Curves.easeIn,
         );
       }
+    });
+  }
+
+  void _refreshNotifCount() {
+    setState(() {
+      _unreadNotifCount = _notifService.getUnreadCount();
     });
   }
 
@@ -108,9 +120,42 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.bell, color: Color(0xFF2C3E50)),
-            onPressed: () {},
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(LucideIcons.bell, color: Color(0xFF2C3E50)),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                  );
+                  // Refresh badge setelah kembali dari notif screen
+                  _refreshNotifCount();
+                },
+              ),
+              if (_unreadNotifCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      _unreadNotifCount > 9 ? '9+' : '$_unreadNotifCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

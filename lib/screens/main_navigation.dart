@@ -7,6 +7,7 @@ import 'profile_screen.dart';
 import 'map_screen.dart';
 import 'games_screen.dart';
 import 'bagas_screen.dart';
+import '../widgets/more_menu_sheet.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -21,18 +22,25 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     const ProfileScreen(), // Index 0
     const MapScreen(),     // Index 1
-    HomeScreen(),    // Index 2 (Pastikan HomeScreen sudah const/clean dari Supabase)
+    HomeScreen(),    // Index 2 
     const GamesScreen(),   // Index 3
-    const Center(child: Text('Halaman Menu Lainnya')), // Index 4
+    const SizedBox(), // Index 4 (Dikosongkan saja karena nggak akan pernah kerender, kita cegat pakai pop-up)
   ];
 
   // Fungsi ini sekarang async karena perlu cek SharedPreferences
   void _onItemTapped(int index) async {
-    // 1. Cek token di SharedPreferences (Sistem Baru)
+    // 1. CEGATAN UNTUK MENU LAINNYA (Index 4)
+    // Kalau user klik menu "Lainnya", munculkan Pop-up lalu BERHENTI (jangan pindah tab)
+    if (index == 4) {
+      MoreMenuSheet.show(context);
+      return; 
+    }
+
+    // 2. Cek token di SharedPreferences (Sistem Baru)
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('token');
 
-    // 2. Logika Cegatan untuk Profil (0) dan Games (3)
+    // 3. Logika Cegatan untuk Profil (0) dan Games (3)
     if ((index == 0 || index == 3) && token == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
