@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'auth_service.dart';
+import '../config/api_config.dart';
 
 class AdminService {
-  static const String baseUrl = AuthService.baseUrl;
+  static String get baseUrl => ApiConfig.baseUrl;
 
   // ─── TICKETS ────────────────────────────────────────────────────────────────
 

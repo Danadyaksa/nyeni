@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'screens/main_navigation.dart';
+import 'views/user/splash_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/notification_service.dart';
+
+// RouteObserver global — dipakai MainNavigation untuk pause/resume shake
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +18,6 @@ void main() async {
   await Hive.openBox('bagas_chats');
   await Hive.openBox('notifications');
 
-  // Init notification service
   await NotificationService().init();
 
   runApp(const NyeniApp());
@@ -28,14 +31,14 @@ class NyeniApp extends StatelessWidget {
     return MaterialApp(
       title: 'Nyeni',
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver], // daftarkan observer
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2C3E50)), 
-        textTheme: GoogleFonts.outfitTextTheme(), 
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2C3E50)),
+        textTheme: GoogleFonts.outfitTextTheme(),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
-      // Langsung arahkan ke MainNavigation
-      home: const MainNavigation(), 
+      home: const SplashScreen(), // Ganti ke SplashScreen untuk cek session
     );
   }
 }

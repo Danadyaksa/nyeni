@@ -38,6 +38,14 @@ db.connect((err) => {
   });
 });
 
+// Helper: bangun URL publik untuk file yang diupload
+// Pakai SERVER_HOST dari .env, fallback ke localhost
+function buildFileUrl(filename) {
+  const PORT = process.env.PORT || 3000;
+  const HOST = process.env.SERVER_HOST || 'localhost';
+  return `http://${HOST}:${PORT}/uploads/${filename}`;
+}
+
 // ==========================================
 // AUTH: REGISTER
 // ==========================================
@@ -81,6 +89,26 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // ==========================================
+// AUTH: VERIFY PASSWORD (untuk enable biometric, tanpa update session)
+// ==========================================
+app.post('/api/auth/verify-password', (req, res) => {
+  const { email, password } = req.body;
+  const sql = 'SELECT * FROM users WHERE email = ?';
+  db.query(sql, [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0)
+      return res.status(401).json({ error: 'Email tidak ditemukan!' });
+
+    const user = results[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Password salah!' });
+
+    // Hanya return success, tidak perlu token atau update session
+    res.json({ message: 'Password benar!', verified: true });
+  });
+});
+
+// ==========================================
 // USER: AMBIL PROFIL
 // ==========================================
 app.get('/api/user/:id', (req, res) => {
@@ -100,6 +128,50 @@ app.post('/api/user/update-name', (req, res) => {
   db.query('UPDATE users SET full_name = ? WHERE id = ?', [full_name, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ status: 'success', message: 'Nama berhasil diubah!' });
+  });
+});
+
+// ==========================================
+// USER: UPDATE EMAIL
+// ==========================================
+app.post('/api/user/update-email', (req, res) => {
+  const { id, email } = req.body;
+  
+  // Validasi format email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Format email tidak valid!' });
+  }
+  
+  // Cek apakah email sudah digunakan user lain
+  db.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, id], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length > 0) {
+      return res.status(400).json({ error: 'Email sudah digunakan oleh user lain!' });
+    }
+    
+    // Update email
+    db.query('UPDATE users SET email = ? WHERE id = ?', [email, id], (err2) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      res.json({ status: 'success', message: 'Email berhasil diubah!' });
+    });
+  });
+});
+
+// ==========================================
+// USER: UPDATE PASSWORD
+// ==========================================
+app.post('/api/user/update-password', async (req, res) => {
+  const { id, password } = req.body;
+  
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Password minimal 6 karakter!' });
+  }
+  
+  const hashedPassword = await bcrypt.hash(password, 10);
+  db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ status: 'success', message: 'Password berhasil diubah!' });
   });
 });
 
@@ -135,8 +207,7 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
   if (!req.file)
     return res.status(400).json({ error: 'Tidak ada file gambar yang dikirim!' });
 
-  const PORT = process.env.PORT || 3000;
-  const avatarUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+  const avatarUrl = buildFileUrl(req.file.filename);
   db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, userId], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ status: 'success', message: 'Avatar berhasil diupdate!', avatar_url: avatarUrl });
@@ -147,7 +218,27 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
 // EVENTS: AMBIL SEMUA (aktif saja, untuk user)
 // ==========================================
 app.get('/api/events', (req, res) => {
-  db.query('SELECT * FROM events WHERE is_active = 1 ORDER BY id DESC', (err, results) => {
+  // Hanya tampilkan event yang:
+  // 1. is_active = 1
+  // 2. Belum expired (cek event_start_date dan event_end_date jika ada)
+  // 3. Jika event_start_date dan event_end_date NULL, tetap tampilkan (event baru)
+  const sql = `
+    SELECT * FROM events 
+    WHERE is_active = 1 
+      AND (
+        -- Jika ada event_start_date, cek apakah belum lewat
+        (event_start_date IS NOT NULL AND event_start_date >= CURDATE())
+        OR 
+        -- Jika ada event_end_date, cek apakah belum lewat
+        (event_end_date IS NOT NULL AND event_end_date >= CURDATE())
+        OR
+        -- Jika kedua field NULL, tetap tampilkan (event baru yang belum set tanggal)
+        (event_start_date IS NULL AND event_end_date IS NULL)
+      )
+    ORDER BY id DESC
+  `;
+  
+  db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -164,6 +255,27 @@ app.get('/api/events/:id', (req, res) => {
 
     let event = results[0];
     const now = new Date();
+    
+    // Cek apakah event sudah lewat (gunakan event_start_date dan event_end_date)
+    const eventStartDate = event.event_start_date ? new Date(event.event_start_date) : null;
+    const eventEndDate = event.event_end_date ? new Date(event.event_end_date) : eventStartDate;
+    
+    let isEventPassed = false;
+    if (eventEndDate) {
+      isEventPassed = now > eventEndDate;
+    } else if (eventStartDate) {
+      isEventPassed = now > eventStartDate;
+    }
+    
+    // Jika event sudah lewat, return error untuk user (kecuali admin)
+    if (isEventPassed && event.is_active === 1) {
+      return res.status(410).json({ 
+        message: 'Event sudah berakhir',
+        event_name: event.title,
+        event_date: event.event_date 
+      });
+    }
+    
     const deadline = event.early_bird_deadline
       ? new Date(event.early_bird_deadline)
       : new Date(0);
@@ -179,15 +291,14 @@ app.get('/api/events/:id', (req, res) => {
         desc: 'Diskon 30% (Sisa waktu terbatas)',
       },
       {
-        type: 'Normal',
+        type: 'Reguler',
         price: normalPrice,
         status: isEarlyActive ? 'LOCKED' : 'AVAILABLE',
-        desc: 'Harga normal acara',
+        desc: 'Harga reguler acara',
       },
     ];
 
-    const eventDate = new Date(event.event_date);
-    if (now > eventDate) {
+    if (isEventPassed) {
       event.ticket_options.forEach((opt) => (opt.status = 'EXPIRED'));
     }
 
@@ -264,14 +375,40 @@ app.post('/api/tickets/checkout', (req, res) => {
 // ==========================================
 app.get('/api/tickets/my-tickets/:user_id', (req, res) => {
   const sql = `
-    SELECT tickets.*, events.image_url
+    SELECT tickets.*, events.image_url, events.event_date
     FROM tickets
-    LEFT JOIN events ON tickets.event_name LIKE CONCAT(events.title, '%')
+    LEFT JOIN events ON (
+      SUBSTRING_INDEX(tickets.event_name, ' - ', 1) = events.title
+    )
     WHERE tickets.user_id = ?
     ORDER BY tickets.created_at DESC
   `;
   db.query(sql, [req.params.user_id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
+    
+    // Auto-expire tiket yang event-nya sudah lewat
+    const now = new Date();
+    const ticketsToExpire = [];
+    
+    results.forEach(ticket => {
+      // Hanya expire tiket yang statusnya ACTIVE dan event sudah lewat
+      if (ticket.status === 'ACTIVE' && ticket.event_date) {
+        const eventDate = new Date(ticket.event_date);
+        if (now > eventDate) {
+          ticketsToExpire.push(ticket.id);
+          ticket.status = 'EXPIRED'; // Update di response
+        }
+      }
+    });
+    
+    // Update database untuk tiket yang expired
+    if (ticketsToExpire.length > 0) {
+      const updateSql = `UPDATE tickets SET status = 'EXPIRED' WHERE id IN (?)`;
+      db.query(updateSql, [ticketsToExpire], (updateErr) => {
+        if (updateErr) console.error('Error auto-expiring tickets:', updateErr);
+      });
+    }
+    
     res.json(results);
   });
 });
@@ -456,22 +593,84 @@ app.get('/api/admin/tickets/pending', (req, res) => {
 // ==========================================
 // ADMIN: ACCEPT TRANSAKSI → semua tiket dalam transaksi jadi ACTIVE
 // ==========================================
+// ADMIN: ACCEPT TRANSAKSI → semua tiket dalam transaksi jadi ACTIVE + KASIH XP KE USER
+// ==========================================
 app.put('/api/admin/tickets/:id/accept', (req, res) => {
-  db.query('SELECT transaction_id FROM tickets WHERE id = ?', [req.params.id], (err, rows) => {
+  // Step 1: Ambil info tiket & transaction_id
+  db.query('SELECT transaction_id, user_id FROM tickets WHERE id = ?', [req.params.id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     if (rows.length === 0) return res.status(404).json({ error: 'Tiket tidak ditemukan' });
 
     const txId = rows[0].transaction_id;
+    const userId = rows[0].user_id;
     const sql = txId
       ? "UPDATE tickets SET status = 'ACTIVE' WHERE transaction_id = ? AND status = 'PENDING'"
       : "UPDATE tickets SET status = 'ACTIVE' WHERE id = ? AND status = 'PENDING'";
     const param = txId || req.params.id;
 
+    // Step 2: Update status tiket jadi ACTIVE
     db.query(sql, [param], (err2, result) => {
       if (err2) return res.status(500).json({ error: err2.message });
       if (result.affectedRows === 0)
         return res.status(404).json({ error: 'Tiket tidak ditemukan atau sudah diproses' });
-      res.json({ message: `${result.affectedRows} tiket berhasil diaktifkan!`, affected: result.affectedRows });
+      
+      const ticketCount = result.affectedRows;
+
+      // Step 3: Kasih XP ke user (150 XP per tiket)
+      const xpReward = ticketCount * 150;
+      
+      db.query('SELECT total_xp, level, completed_levels_trivia, completed_levels_labirin FROM users WHERE id = ?', [userId], (err3, userRows) => {
+        if (err3 || userRows.length === 0) {
+          // Kalau gagal ambil user data, tetap return success (tiket sudah aktif)
+          return res.json({ 
+            message: `${ticketCount} tiket berhasil diaktifkan!`, 
+            affected: ticketCount,
+            xp_given: 0,
+            note: 'XP tidak bisa diberikan (user tidak ditemukan)'
+          });
+        }
+
+        const user = userRows[0];
+        const currentXp = user.total_xp || 0;
+        const newXp = currentXp + xpReward;
+
+        // Hitung level baru berdasarkan XP
+        let newLevel = 1;
+        if (newXp >= 2700) newLevel = 10;
+        else if (newXp >= 2200) newLevel = 9;
+        else if (newXp >= 1750) newLevel = 8;
+        else if (newXp >= 1350) newLevel = 7;
+        else if (newXp >= 1000) newLevel = 6;
+        else if (newXp >= 700) newLevel = 5;
+        else if (newXp >= 450) newLevel = 4;
+        else if (newXp >= 250) newLevel = 3;
+        else if (newXp >= 100) newLevel = 2;
+
+        // Update XP & level user
+        db.query(
+          'UPDATE users SET total_xp = ?, level = ? WHERE id = ?',
+          [newXp, newLevel, userId],
+          (err4) => {
+            if (err4) {
+              console.error('Error updating XP:', err4);
+              return res.json({ 
+                message: `${ticketCount} tiket berhasil diaktifkan!`, 
+                affected: ticketCount,
+                xp_given: 0,
+                note: 'XP tidak bisa diberikan (error update)'
+              });
+            }
+
+            res.json({ 
+              message: `${ticketCount} tiket berhasil diaktifkan! User dapat +${xpReward} XP 🎉`, 
+              affected: ticketCount,
+              xp_given: xpReward,
+              new_xp: newXp,
+              new_level: newLevel
+            });
+          }
+        );
+      });
     });
   });
 });
@@ -503,12 +702,38 @@ app.put('/api/admin/tickets/:id/decline', (req, res) => {
 // ADMIN: SCAN QR → EXPIRED
 // ==========================================
 app.put('/api/admin/tickets/:id/scan', (req, res) => {
-  db.query('SELECT * FROM tickets WHERE id = ?', [req.params.id], (err, results) => {
+  // Join dengan events untuk mendapatkan event_date
+  const sql = `
+    SELECT tickets.*, events.event_date
+    FROM tickets
+    LEFT JOIN events ON (
+      SUBSTRING_INDEX(tickets.event_name, ' - ', 1) = events.title
+    )
+    WHERE tickets.id = ?
+  `;
+  
+  db.query(sql, [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0)
       return res.status(404).json({ error: 'Tiket tidak ditemukan, QR tidak valid!' });
 
     const ticket = results[0];
+    
+    // Cek apakah event sudah lewat
+    if (ticket.event_date) {
+      const now = new Date();
+      const eventDate = new Date(ticket.event_date);
+      if (now > eventDate) {
+        // Auto-expire tiket jika event sudah lewat
+        db.query("UPDATE tickets SET status = 'EXPIRED' WHERE id = ?", [req.params.id], () => {});
+        return res.status(400).json({
+          error: 'Tiket sudah kadaluwarsa, event sudah lewat!',
+          event_info: ticket.event_name,
+          event_date: ticket.event_date,
+        });
+      }
+    }
+    
     if (ticket.status === 'PENDING')
       return res.status(400).json({
         error: 'Tiket belum diverifikasi admin, tidak bisa masuk!',
@@ -547,6 +772,22 @@ app.put('/api/admin/tickets/:id/scan', (req, res) => {
 app.get('/api/admin/events', (req, res) => {
   db.query('SELECT * FROM events ORDER BY id DESC', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
+    
+    // Tambahkan flag is_expired untuk setiap event
+    const now = new Date();
+    results.forEach(event => {
+      const eventStartDate = event.event_start_date ? new Date(event.event_start_date) : null;
+      const eventEndDate = event.event_end_date ? new Date(event.event_end_date) : eventStartDate;
+      
+      if (eventEndDate) {
+        event.is_expired = now > eventEndDate;
+      } else if (eventStartDate) {
+        event.is_expired = now > eventStartDate;
+      } else {
+        event.is_expired = false;
+      }
+    });
+    
     res.json(results);
   });
 });
@@ -557,8 +798,7 @@ app.get('/api/admin/events', (req, res) => {
 app.post('/api/admin/events/upload-image', upload.single('image'), (req, res) => {
   if (!req.file)
     return res.status(400).json({ error: 'Tidak ada file gambar yang dikirim!' });
-  const PORT = process.env.PORT || 3000;
-  const imageUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+  const imageUrl = buildFileUrl(req.file.filename);
   res.json({ image_url: imageUrl });
 });
 
@@ -568,6 +808,7 @@ app.post('/api/admin/events/upload-image', upload.single('image'), (req, res) =>
 app.post('/api/admin/events', (req, res) => {
   const {
     title, category, event_date, event_start_date, event_end_date,
+    open_time, close_time,
     location, latitude, longitude,
     price, regular_start, regular_end,
     early_bird_price, early_bird_start, early_bird_end,
@@ -580,14 +821,16 @@ app.post('/api/admin/events', (req, res) => {
   const sql = `
     INSERT INTO events
       (title, category, event_date, event_start_date, event_end_date,
+       open_time, close_time,
        location, latitude, longitude,
        price, regular_start, regular_end,
        early_bird_price, early_bird_start, early_bird_end,
        image_url, description, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   db.query(sql, [
     title, category, event_date, event_start_date || null, event_end_date || null,
+    open_time || null, close_time || null,
     location, latitude || null, longitude || null,
     price || 0, regular_start || null, regular_end || null,
     early_bird_price || null, early_bird_start || null, early_bird_end || null,
@@ -604,6 +847,7 @@ app.post('/api/admin/events', (req, res) => {
 app.put('/api/admin/events/:id', (req, res) => {
   const {
     title, category, event_date, event_start_date, event_end_date,
+    open_time, close_time,
     location, latitude, longitude,
     price, regular_start, regular_end,
     early_bird_price, early_bird_start, early_bird_end,
@@ -613,6 +857,7 @@ app.put('/api/admin/events/:id', (req, res) => {
   const sql = `
     UPDATE events SET
       title = ?, category = ?, event_date = ?, event_start_date = ?, event_end_date = ?,
+      open_time = ?, close_time = ?,
       location = ?, latitude = ?, longitude = ?,
       price = ?, regular_start = ?, regular_end = ?,
       early_bird_price = ?, early_bird_start = ?, early_bird_end = ?,
@@ -621,6 +866,7 @@ app.put('/api/admin/events/:id', (req, res) => {
   `;
   db.query(sql, [
     title, category, event_date, event_start_date || null, event_end_date || null,
+    open_time || null, close_time || null,
     location, latitude || null, longitude || null,
     price || 0, regular_start || null, regular_end || null,
     early_bird_price || null, early_bird_start || null, early_bird_end || null,
@@ -638,46 +884,165 @@ app.put('/api/admin/events/:id', (req, res) => {
 // ADMIN: HAPUS EVENT
 // ==========================================
 app.delete('/api/admin/events/:id', (req, res) => {
-  db.query('DELETE FROM events WHERE id = ?', [req.params.id], (err, result) => {
+  // Step 1: Ambil data event untuk cek tanggal
+  db.query('SELECT * FROM events WHERE id = ?', [req.params.id], (err, eventResult) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: 'Event tidak ditemukan' });
-    res.json({ message: 'Event berhasil dihapus!' });
+    if (eventResult.length === 0) return res.status(404).json({ error: 'Event tidak ditemukan' });
+    
+    const event = eventResult[0];
+    const now = new Date();
+    
+    // Cek apakah event sudah lewat
+    const eventStartDate = event.event_start_date ? new Date(event.event_start_date) : null;
+    const eventEndDate = event.event_end_date ? new Date(event.event_end_date) : eventStartDate;
+    
+    let isEventPassed = false;
+    if (eventEndDate) {
+      isEventPassed = now > eventEndDate;
+    } else if (eventStartDate) {
+      isEventPassed = now > eventStartDate;
+    }
+    
+    // Step 2: Cek apakah ada tiket ACTIVE/PENDING untuk event ini
+    db.query(
+      `SELECT COUNT(*) as ticket_count 
+       FROM tickets 
+       WHERE SUBSTRING_INDEX(event_name, ' - ', 1) = ?
+         AND status IN ('ACTIVE', 'PENDING')`,
+      [event.title],
+      (err2, countResult) => {
+        if (err2) return res.status(500).json({ error: err2.message });
+        
+        const ticketCount = countResult[0]?.ticket_count || 0;
+        
+        // Step 3: Jika ada tiket aktif DAN event belum lewat, tolak delete
+        if (ticketCount > 0 && !isEventPassed) {
+          return res.status(400).json({ 
+            error: `Tidak bisa menghapus event! Masih ada ${ticketCount} tiket aktif/pending dan event belum berakhir.`,
+            suggestion: 'Tunggu sampai event selesai atau gunakan fitur nonaktifkan event (is_active = 0).'
+          });
+        }
+        
+        // Step 4: Jika event sudah lewat ATAU tidak ada tiket aktif, boleh hapus
+        db.query('DELETE FROM events WHERE id = ?', [req.params.id], (err3, result) => {
+          if (err3) return res.status(500).json({ error: err3.message });
+          if (result.affectedRows === 0)
+            return res.status(404).json({ error: 'Event tidak ditemukan' });
+          
+          let message = 'Event berhasil dihapus!';
+          if (ticketCount > 0 && isEventPassed) {
+            message += ` (Event sudah berakhir, ${ticketCount} tiket akan tetap tersimpan di riwayat user)`;
+          }
+          
+          res.json({ message });
+        });
+      }
+    );
   });
 });
 
 // ==========================================
 // ADMIN: REVENUE SUMMARY
 // ==========================================
+// ADMIN: REVENUE SUMMARY
+// ==========================================
 app.get('/api/admin/revenue', (req, res) => {
-  // Revenue = total service_fee dari tiket ACTIVE + EXPIRED
+
   const sqlTotal = `
     SELECT
-      COALESCE(SUM(CASE WHEN t.status IN ('ACTIVE','EXPIRED') THEN t.service_fee ELSE 0 END), 0) AS total_revenue,
-      COUNT(CASE WHEN t.status IN ('ACTIVE','EXPIRED') THEN 1 END) AS total_sold,
+      COUNT(CASE WHEN t.status IN ('ACTIVE','EXPIRED','USED') THEN 1 END) AS total_sold,
       COUNT(CASE WHEN t.status = 'PENDING'  THEN 1 END) AS pending_count,
       COUNT(CASE WHEN t.status = 'ACTIVE'   THEN 1 END) AS active_count,
       COUNT(CASE WHEN t.status = 'EXPIRED'  THEN 1 END) AS expired_count,
-      COUNT(CASE WHEN t.status = 'DECLINED' THEN 1 END) AS declined_count
+      COUNT(CASE WHEN t.status = 'DECLINED' THEN 1 END) AS declined_count,
+      (
+        SELECT COALESCE(SUM(tx_fee), 0) FROM (
+          SELECT MAX(service_fee) AS tx_fee
+          FROM tickets
+          WHERE status IN ('ACTIVE','EXPIRED','USED')
+            AND service_fee > 0
+          GROUP BY COALESCE(transaction_id, id)
+        ) AS fees
+      ) AS total_revenue
     FROM tickets t
   `;
+
+  // Revenue per event — 1 baris per event, hitung transaksi unik & tiket
   const sqlPerEvent = `
     SELECT
-      t.event_name,
-      COUNT(*) AS ticket_count,
-      COALESCE(SUM(t.service_fee), 0) AS revenue
-    FROM tickets t
-    WHERE t.status IN ('ACTIVE','EXPIRED')
-    GROUP BY t.event_name
+      sub.event_name,
+      COUNT(*) AS transaction_count,
+      SUM(sub.ticket_count) AS ticket_count,
+      SUM(sub.tx_fee) AS revenue
+    FROM (
+      SELECT
+        t.event_name,
+        COALESCE(t.transaction_id, t.id) AS tx_id,
+        COUNT(*) AS ticket_count,
+        MAX(t.service_fee) AS tx_fee
+      FROM tickets t
+      WHERE t.status IN ('ACTIVE','EXPIRED','USED')
+        AND t.service_fee > 0
+      GROUP BY COALESCE(t.transaction_id, t.id), t.event_name
+    ) AS sub
+    GROUP BY sub.event_name
     ORDER BY revenue DESC
   `;
+
+  // Riwayat transaksi — 1 baris per transaction_id
+  // Pakai subquery: ambil tiket "utama" (service_fee > 0 atau yang pertama)
   const sqlRecent = `
-    SELECT t.*, u.full_name AS user_name
-    FROM tickets t
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.status IN ('ACTIVE','EXPIRED')
-    ORDER BY t.created_at DESC
-    LIMIT 20
+    SELECT
+      tx.tx_id,
+      tx.event_name,
+      tx.user_name,
+      tx.service_fee,
+      tx.total_amount,
+      tx.unique_code,
+      tx.ticket_price,
+      tx.created_at,
+      tx.ticket_count
+    FROM (
+      SELECT
+        COALESCE(t.transaction_id, t.id) AS tx_id,
+        t.event_name,
+        u.full_name AS user_name,
+        MAX(t.service_fee) AS service_fee,
+        MAX(t.total_amount) AS total_amount,
+        MAX(t.unique_code) AS unique_code,
+        MAX(t.ticket_price) AS ticket_price,
+        MIN(t.created_at) AS created_at,
+        COUNT(*) AS ticket_count
+      FROM tickets t
+      LEFT JOIN users u ON t.user_id = u.id
+      WHERE t.status IN ('ACTIVE','EXPIRED','USED')
+      GROUP BY COALESCE(t.transaction_id, t.id), t.event_name, u.full_name
+    ) AS tx
+    ORDER BY tx.created_at DESC
+    LIMIT 30
+  `;
+
+  // Revenue per bulan — hitung fee per transaksi (bukan per tiket)
+  const sqlMonthly = `
+    SELECT
+      DATE_FORMAT(created_at, '%Y-%m') AS month,
+      DATE_FORMAT(created_at, '%b %Y') AS month_label,
+      COUNT(*) AS transaction_count,
+      SUM(ticket_count) AS ticket_count,
+      SUM(tx_fee) AS revenue
+    FROM (
+      SELECT
+        COALESCE(t.transaction_id, t.id) AS tx_id,
+        MIN(t.created_at) AS created_at,
+        COUNT(*) AS ticket_count,
+        CASE WHEN t.transaction_id IS NOT NULL THEN MAX(t.service_fee) ELSE 2500 END AS tx_fee
+      FROM tickets t
+      WHERE t.status IN ('ACTIVE','EXPIRED','USED')
+        AND t.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+      GROUP BY COALESCE(t.transaction_id, t.id)
+    ) AS per_tx
+    GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%b %Y')
+    ORDER BY month ASC
   `;
 
   db.query(sqlTotal, (err, totalResult) => {
@@ -686,16 +1051,20 @@ app.get('/api/admin/revenue', (req, res) => {
       if (err2) return res.status(500).json({ error: err2.message });
       db.query(sqlRecent, (err3, recentResult) => {
         if (err3) return res.status(500).json({ error: err3.message });
-        const s = totalResult[0];
-        res.json({
-          total_revenue: parseInt(s.total_revenue) || 0,
-          total_sold: parseInt(s.total_sold) || 0,
-          pending_count: parseInt(s.pending_count) || 0,
-          active_count: parseInt(s.active_count) || 0,
-          expired_count: parseInt(s.expired_count) || 0,
-          declined_count: parseInt(s.declined_count) || 0,
-          per_event: perEventResult,
-          recent_transactions: recentResult,
+        db.query(sqlMonthly, (err4, monthlyResult) => {
+          if (err4) return res.status(500).json({ error: err4.message });
+          const s = totalResult[0];
+          res.json({
+            total_revenue: parseInt(s.total_revenue) || 0,
+            total_sold: parseInt(s.total_sold) || 0,
+            pending_count: parseInt(s.pending_count) || 0,
+            active_count: parseInt(s.active_count) || 0,
+            expired_count: parseInt(s.expired_count) || 0,
+            declined_count: parseInt(s.declined_count) || 0,
+            per_event: perEventResult,
+            recent_transactions: recentResult,
+            monthly: monthlyResult,
+          });
         });
       });
     });

@@ -1,10 +1,102 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
+import '../config/api_config.dart';
 
 class AuthService {
-  // Gunakan 10.0.2.2 untuk emulator, atau IP laptopmu jika pakai HP fisik
-  static const String baseUrl = "http://192.168.18.85:3000/api";
+  // Gunakan ApiConfig untuk base URL
+  static String get baseUrl => ApiConfig.baseUrl;
+  
+  final _secureStorage = const FlutterSecureStorage();
+  final _localAuth = LocalAuthentication();
+
+  // ==========================================
+  // BIOMETRIC AUTHENTICATION
+  // ==========================================
+  
+  /// Cek apakah device support biometric
+  Future<bool> isBiometricAvailable() async {
+    try {
+      return await _localAuth.canCheckBiometrics && await _localAuth.isDeviceSupported();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Cek apakah user sudah enable biometric login (per user ID)
+  Future<bool> isBiometricEnabled(String userId) async {
+    final enabled = await _secureStorage.read(key: 'biometric_enabled_$userId');
+    return enabled == 'true';
+  }
+
+  /// Enable/disable biometric login (per user ID)
+  Future<void> setBiometricEnabled(String userId, bool enabled) async {
+    await _secureStorage.write(key: 'biometric_enabled_$userId', value: enabled.toString());
+  }
+
+  /// Simpan credentials untuk biometric login (per user ID)
+  Future<void> saveBiometricCredentials(String userId, String email, String password) async {
+    await _secureStorage.write(key: 'biometric_email_$userId', value: email);
+    await _secureStorage.write(key: 'biometric_password_$userId', value: password);
+  }
+
+  /// Hapus credentials biometric (per user ID)
+  Future<void> clearBiometricCredentials(String userId) async {
+    await _secureStorage.delete(key: 'biometric_email_$userId');
+    await _secureStorage.delete(key: 'biometric_password_$userId');
+    await _secureStorage.delete(key: 'biometric_enabled_$userId');
+  }
+
+  /// Cek apakah ada user yang pernah enable biometric (untuk login screen)
+  Future<String?> getLastBiometricUserId() async {
+    return await _secureStorage.read(key: 'last_biometric_user_id');
+  }
+
+  /// Simpan user ID terakhir yang enable biometric
+  Future<void> setLastBiometricUserId(String userId) async {
+    await _secureStorage.write(key: 'last_biometric_user_id', value: userId);
+  }
+
+  /// Authenticate dengan biometric dan login otomatis
+  Future<Map<String, dynamic>> loginWithBiometric() async {
+    try {
+      // Ambil user ID terakhir yang enable biometric
+      final userId = await getLastBiometricUserId();
+      if (userId == null) {
+        return {"error": "Biometric login belum diaktifkan"};
+      }
+
+      // Cek apakah user ini sudah enable biometric
+      final enabled = await isBiometricEnabled(userId);
+      if (!enabled) {
+        return {"error": "Biometric login belum diaktifkan"};
+      }
+
+      // Authenticate dengan biometric
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Gunakan biometric untuk masuk ke Nyeni',
+      );
+
+      if (!authenticated) {
+        return {"error": "Autentikasi biometric gagal"};
+      }
+
+      // Ambil credentials dari secure storage
+      final email = await _secureStorage.read(key: 'biometric_email_$userId');
+      final password = await _secureStorage.read(key: 'biometric_password_$userId');
+
+      if (email == null || password == null) {
+        return {"error": "Credentials tidak ditemukan. Silakan login manual terlebih dahulu."};
+      }
+
+      // Login dengan credentials tersimpan
+      return await login(email, password);
+    } catch (e) {
+      return {"error": "Biometric authentication error: $e"};
+    }
+  }
 
   // LOGIN
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -22,6 +114,21 @@ class AuthService {
         await prefs.setString('user_data', jsonEncode(data['user']));
       }
       return data;
+    } catch (e) {
+      return {"error": "Koneksi server gagal: $e"};
+    }
+  }
+
+  // VERIFY PASSWORD (tanpa update session, untuk enable biometric)
+  Future<Map<String, dynamic>> verifyPassword(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/verify-password"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "password": password}),
+      );
+
+      return jsonDecode(response.body);
     } catch (e) {
       return {"error": "Koneksi server gagal: $e"};
     }
