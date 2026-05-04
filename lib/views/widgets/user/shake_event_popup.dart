@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../config/api_config.dart';
 
 /// Popup card rekomendasi event setelah shake
@@ -121,8 +122,8 @@ class ShakeEventPopup extends StatelessWidget {
                           ),
                           child: Text(
                             category,
-                            style: const TextStyle(
-                                color: Color(0xFF2C3E50),
+                            style: GoogleFonts.manrope(
+                                color: const Color(0xFF9A3412),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold),
                           ),
@@ -164,10 +165,10 @@ class ShakeEventPopup extends StatelessWidget {
                     // Title
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: GoogleFonts.ebGaramond(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
+                        color: const Color(0xFF3A302A),
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -188,14 +189,14 @@ class ShakeEventPopup extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2C3E50).withOpacity(0.08),
+                            color: const Color(0xFF9A3412).withOpacity(0.08),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             priceStr,
-                            style: const TextStyle(
+                            style: GoogleFonts.ebGaramond(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2C3E50),
+                              color: const Color(0xFF9A3412),
                               fontSize: 15,
                             ),
                           ),
@@ -224,22 +225,22 @@ class ShakeEventPopup extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onViewDetail,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2C3E50),
+                          backgroundColor: const Color(0xFF9A3412),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                           elevation: 0,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text('Lihat Event',
-                                style: TextStyle(
+                                style: GoogleFonts.manrope(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15)),
-                            SizedBox(width: 6),
-                            Icon(LucideIcons.arrowRight,
+                            const SizedBox(width: 6),
+                            const Icon(LucideIcons.arrowRight,
                                 color: Colors.white, size: 16),
                           ],
                         ),
@@ -252,8 +253,8 @@ class ShakeEventPopup extends StatelessWidget {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: onDismiss,
-                        child: const Text('Tutup',
-                            style: TextStyle(color: Colors.grey, fontSize: 13)),
+                        child: Text('Tutup',
+                            style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13)),
                       ),
                     ),
                   ],
@@ -270,7 +271,7 @@ class ShakeEventPopup extends StatelessWidget {
     return Container(
       height: 180,
       width: double.infinity,
-      color: const Color(0xFF2C3E50),
+      color: const Color(0xFF9A3412),
       child: const Icon(LucideIcons.image, color: Colors.white54, size: 48),
     );
   }
@@ -278,12 +279,12 @@ class ShakeEventPopup extends StatelessWidget {
   Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: 14, color: const Color(0xFF78706A)),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

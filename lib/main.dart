@@ -34,9 +34,9 @@ class NyeniApp extends StatelessWidget {
       navigatorObservers: [routeObserver], // daftarkan observer
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2C3E50)),
-        textTheme: GoogleFonts.outfitTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF9A3412)),
+        textTheme: GoogleFonts.manropeTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFFAF5EE),
       ),
       home: const SplashScreen(), // Ganti ke SplashScreen untuk cek session
     );

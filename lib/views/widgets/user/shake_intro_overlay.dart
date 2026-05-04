@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Overlay animasi "Shake Detected!" yang muncul setelah shake
 class ShakeIntroOverlay extends StatefulWidget {
@@ -113,7 +114,7 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
         return Opacity(
           opacity: _bgFade.value,
           child: Container(
-            color: const Color(0xFF0D1B2A),
+            color: const Color(0xFF3A302A),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -139,17 +140,17 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  Colors.orange.withOpacity(0.3),
-                                  Colors.orange.withOpacity(0.05),
+                                  const Color(0xFF9A3412).withOpacity(0.3),
+                                  const Color(0xFF9A3412).withOpacity(0.05),
                                 ],
                               ),
                               border: Border.all(
-                                  color: Colors.orange.withOpacity(0.6),
+                                  color: const Color(0xFF9A3412).withOpacity(0.6),
                                   width: 1.5),
                             ),
                             child: const Icon(
                               LucideIcons.smartphone,
-                              color: Colors.orange,
+                              color: Color(0xFF9A3412),
                               size: 42,
                             ),
                           ),
@@ -157,9 +158,9 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
                         const SizedBox(height: 28),
 
                         // Teks utama
-                        const Text(
+                        Text(
                           'SHAKE DETECTED',
-                          style: TextStyle(
+                          style: GoogleFonts.manrope(
                             color: Colors.white,
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -176,14 +177,14 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
                             Container(
                               width: 30,
                               height: 1.5,
-                              color: Colors.orange.withOpacity(0.5),
+                              color: const Color(0xFF9A3412).withOpacity(0.5),
                             ),
                             const SizedBox(width: 10),
                             Container(
                               width: 6,
                               height: 6,
                               decoration: const BoxDecoration(
-                                color: Colors.orange,
+                                color: Color(0xFF9A3412),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -191,17 +192,17 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
                             Container(
                               width: 30,
                               height: 1.5,
-                              color: Colors.orange.withOpacity(0.5),
+                              color: const Color(0xFF9A3412).withOpacity(0.5),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
 
                         // Teks bawah
-                        const Text(
-                          'Mencari rekomendasi event untukmu',
-                          style: TextStyle(
-                            color: Colors.white54,
+                        Text(
+                          'Memunculkan event random untukmu',
+                          style: GoogleFonts.manrope(
+                            color: Colors.white70,
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             letterSpacing: 0.3,
@@ -231,7 +232,7 @@ class _ShakeIntroOverlayState extends State<ShakeIntroOverlay>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.orange,
+            color: const Color(0xFF9A3412),
             width: 1.5,
           ),
         ),
