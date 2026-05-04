@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/event_controller.dart';
 import '../../models/event_model.dart';
 import '../../config/api_config.dart';
@@ -182,28 +183,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))));
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF9A3412))));
     }
     if (_event == null) {
-      return const Scaffold(body: Center(child: Text("Event tidak ditemukan")));
+      return Scaffold(
+        body: Center(
+          child: Text(
+            "Event tidak ditemukan",
+            style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
+          ),
+        ),
+      );
     }
 
     final ticketOptions = _buildTicketOptions();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFAF5EE),
       body: CustomScrollView(
         slivers: [
           // ── App bar dengan gambar ──
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: const Color(0xFF2C3E50),
-            leading: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: IconButton(
-                icon: const Icon(LucideIcons.arrowLeft, color: Colors.black),
-                onPressed: () => Navigator.pop(context),
-              ),
+            backgroundColor: const Color(0xFF9A3412),
+            leading: IconButton(
+              icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
@@ -220,7 +226,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           // ── Konten ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 120), // Extra bottom padding for sticky section
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -228,12 +234,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: const Color(0xFF9A3412).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       _event!['category'] ?? '',
-                      style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.manrope(
+                        color: const Color(0xFF9A3412),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -241,24 +250,34 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   // Judul
                   Text(
                     _event!['title'] ?? '',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.ebGaramond(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3A302A),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // Tanggal
                   Row(children: [
-                    const Icon(LucideIcons.calendar, size: 18, color: Colors.grey),
+                    const Icon(LucideIcons.calendar, size: 18, color: Color(0xFF78706A)),
                     const SizedBox(width: 8),
-                    Text(_event!['event_date'] ?? '-', style: const TextStyle(color: Colors.grey)),
+                    Text(
+                      _event!['event_date'] ?? '-',
+                      style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                    ),
                   ]),
                   const SizedBox(height: 8),
 
                   // Lokasi
                   Row(children: [
-                    const Icon(LucideIcons.mapPin, size: 18, color: Colors.grey),
+                    const Icon(LucideIcons.mapPin, size: 18, color: Color(0xFF78706A)),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(_event!['location'] ?? '-', style: const TextStyle(color: Colors.grey)),
+                      child: Text(
+                        _event!['location'] ?? '-',
+                        style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                      ),
                     ),
                   ]),
                   const SizedBox(height: 8),
@@ -273,31 +292,36 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2C3E50).withOpacity(0.05),
+                          color: const Color(0xFF9A3412).withOpacity(0.05),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF2C3E50).withOpacity(0.2)),
+                          border: Border.all(color: const Color(0xFFD8D0C8)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(LucideIcons.clock, size: 15, color: Color(0xFF2C3E50)),
+                            const Icon(LucideIcons.clock, size: 15, color: Color(0xFF9A3412)),
                             const SizedBox(width: 8),
                             Text(
                               _buildTimeDisplay(
                                 _event!['open_time']?.toString(),
                                 _event!['close_time']?.toString(),
                               ),
-                              style: const TextStyle(
-                                color: Color(0xFF2C3E50),
+                              style: GoogleFonts.manrope(
+                                color: const Color(0xFF9A3412),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Icon(LucideIcons.globe, size: 13, color: Colors.grey),
+                            const Icon(LucideIcons.globe, size: 13, color: Color(0xFF78706A)),
                             const SizedBox(width: 3),
-                            const Text('Lihat zona waktu lain',
-                                style: TextStyle(color: Colors.grey, fontSize: 11)),
+                            Text(
+                              'Lihat zona waktu lain',
+                              style: GoogleFonts.manrope(
+                                color: const Color(0xFF78706A),
+                                fontSize: 11,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -305,16 +329,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   const SizedBox(height: 24),
 
                   // Deskripsi
-                  const Text("Tentang Acara", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Tentang Acara",
+                    style: GoogleFonts.ebGaramond(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3A302A),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _event!['description'] ?? 'Tidak ada deskripsi.',
-                    style: const TextStyle(color: Colors.grey, height: 1.6),
+                    style: GoogleFonts.manrope(
+                      color: const Color(0xFF78706A),
+                      height: 1.6,
+                    ),
                   ),
                   const SizedBox(height: 28),
 
                   // ── Pilihan Tiket ──
-                  const Text("Pilih Tiket", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Pilih Tiket",
+                    style: GoogleFonts.ebGaramond(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3A302A),
+                    ),
+                  ),
                   const SizedBox(height: 12),
 
                   ...ticketOptions.map((ticket) {
@@ -329,17 +370,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: !isAvailable
-                              ? Colors.grey.shade50
+                              ? const Color(0xFFFAFAF9)
                               : isSelected
-                                  ? const Color(0xFF2C3E50).withOpacity(0.05)
+                                  ? const Color(0xFF9A3412).withOpacity(0.05)
                                   : Colors.white,
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF2C3E50)
-                                : Colors.grey.shade300,
+                                ? const Color(0xFF9A3412)
+                                : const Color(0xFFD8D0C8),
                             width: isSelected ? 2 : 1,
                           ),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,10 +394,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   children: [
                                     Text(
                                       ticket['type'],
-                                      style: TextStyle(
+                                      style: GoogleFonts.manrope(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
-                                        color: isAvailable ? Colors.black : Colors.grey,
+                                        color: isAvailable ? const Color(0xFF3A302A) : const Color(0xFF78706A),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -373,7 +414,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                         const SizedBox(width: 4),
                                         Text(
                                           ticket['status'],
-                                          style: TextStyle(
+                                          style: GoogleFonts.manrope(
                                             fontSize: 11,
                                             color: isAvailable ? Colors.green : Colors.red,
                                             fontWeight: FontWeight.w600,
@@ -393,25 +434,32 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                         children: [
                                           Text(
                                             'Rp ${_fmtPrice(ticket['price'])}',
-                                            style: TextStyle(
+                                            style: GoogleFonts.manrope(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
                                               color: isAvailable
-                                                  ? const Color(0xFF2C3E50)
-                                                  : Colors.grey,
+                                                  ? const Color(0xFF9A3412)
+                                                  : const Color(0xFF78706A),
                                             ),
                                           ),
                                           const SizedBox(width: 4),
-                                          Icon(LucideIcons.refreshCcw,
-                                              size: 12,
-                                              color: isAvailable ? Colors.grey : Colors.grey.shade300),
+                                          Icon(
+                                            LucideIcons.refreshCcw,
+                                            size: 12,
+                                            color: isAvailable ? const Color(0xFF78706A) : const Color(0xFFD8D0C8),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    const Text('/ tiket', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                    Text(
+                                      '/ tiket',
+                                      style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A)),
+                                    ),
                                     if (isAvailable)
-                                      const Text('tap untuk konversi',
-                                          style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                      Text(
+                                        'tap untuk konversi',
+                                        style: GoogleFonts.manrope(fontSize: 9, color: const Color(0xFF78706A)),
+                                      ),
                                   ],
                                 ),
                               ],
@@ -423,17 +471,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
+                                  color: const Color(0xFFEAE2DA),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(LucideIcons.calendarRange, size: 12, color: Colors.grey),
+                                    const Icon(LucideIcons.calendarRange, size: 12, color: Color(0xFF78706A)),
                                     const SizedBox(width: 5),
                                     Text(
                                       _buildPeriodText(ticket['start'], ticket['end']),
-                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                      style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A)),
                                     ),
                                   ],
                                 ),
@@ -445,18 +493,25 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 ticket['desc'],
-                                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A)),
                               ),
                             ],
 
                             // Checkmark kalau dipilih
                             if (isSelected) ...[
                               const SizedBox(height: 8),
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(LucideIcons.checkCircle2, size: 14, color: Color(0xFF2C3E50)),
-                                  SizedBox(width: 4),
-                                  Text('Dipilih', style: TextStyle(fontSize: 11, color: Color(0xFF2C3E50), fontWeight: FontWeight.bold)),
+                                  const Icon(LucideIcons.checkCircle2, size: 14, color: Color(0xFF9A3412)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Dipilih',
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 11,
+                                      color: const Color(0xFF9A3412),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -467,130 +522,141 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   }),
 
                   const SizedBox(height: 24),
-
-                  // ── Counter + Tombol Pesan ──
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        // Counter
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(LucideIcons.minus, size: 16),
-                                onPressed: _ticketCount > 1
-                                    ? () => setState(() => _ticketCount--)
-                                    : null,
-                                color: _ticketCount > 1 ? const Color(0xFF2C3E50) : Colors.grey,
-                              ),
-                              Text(
-                                '$_ticketCount',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: const Icon(LucideIcons.plus, size: 16),
-                                onPressed: () => setState(() => _ticketCount++),
-                                color: const Color(0xFF2C3E50),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-
-                        // Tombol pesan
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _selectedTicket == null
-                                ? null
-                                : () {
-                                    final priceInt = _selectedTicket!['price'] as int;
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => CheckoutScreen(
-                                          event: Event(
-                                            id: widget.eventId,
-                                            name: '${_event!['title']} - ${_selectedTicket!['type']}',
-                                            description: _event!['description'] ?? '',
-                                            date: _event!['event_date'],
-                                            location: _event!['location'] ?? '',
-                                            latitude: _event!['latitude'] != null ? double.tryParse(_event!['latitude'].toString()) : null,
-                                            longitude: _event!['longitude'] != null ? double.tryParse(_event!['longitude'].toString()) : null,
-                                            price: priceInt,
-                                            imageUrl: _event!['image_url'],
-                                            createdAt: _event!['created_at'] ?? '',
-                                            category: _event!['category'],
-                                          ),
-                                          count: _ticketCount,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2C3E50),
-                              disabledBackgroundColor: Colors.grey.shade300,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(
-                              _selectedTicket == null ? 'Pilih Tiket Dulu' : 'Pesan $_ticketCount Tiket',
-                              style: TextStyle(
-                                color: _selectedTicket == null ? Colors.grey : Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Preview total harga
-                  if (_selectedTicket != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2C3E50).withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '$_ticketCount tiket × Rp ${_fmtPrice(_selectedTicket!['price'])}',
-                            style: const TextStyle(color: Colors.grey, fontSize: 13),
-                          ),
-                          Text(
-                            'Rp ${_fmtPrice((_selectedTicket!['price'] as int) * _ticketCount)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2C3E50),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
         ],
+      ),
+      // ── Sticky Bottom Section: Counter + Button ──
+      bottomSheet: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFAF9),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          border: Border.all(color: const Color(0xFFD8D0C8)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Preview total harga
+              if (_selectedTicket != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9A3412).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '$_ticketCount tiket × Rp ${_fmtPrice(_selectedTicket!['price'])}',
+                        style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
+                      ),
+                      Text(
+                        'Rp ${_fmtPrice((_selectedTicket!['price'] as int) * _ticketCount)}',
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF9A3412),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Counter + Button
+              Row(
+                children: [
+                  // Counter
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFD8D0C8)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(LucideIcons.minus, size: 16),
+                          onPressed: _ticketCount > 1
+                              ? () => setState(() => _ticketCount--)
+                              : null,
+                          color: _ticketCount > 1 ? const Color(0xFF9A3412) : const Color(0xFF78706A),
+                        ),
+                        Text(
+                          '$_ticketCount',
+                          style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        IconButton(
+                          icon: const Icon(LucideIcons.plus, size: 16),
+                          onPressed: () => setState(() => _ticketCount++),
+                          color: const Color(0xFF9A3412),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Tombol pesan
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _selectedTicket == null
+                          ? null
+                          : () {
+                              final priceInt = _selectedTicket!['price'] as int;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CheckoutScreen(
+                                    event: Event(
+                                      id: widget.eventId,
+                                      name: '${_event!['title']} - ${_selectedTicket!['type']}',
+                                      description: _event!['description'] ?? '',
+                                      date: _event!['event_date'],
+                                      location: _event!['location'] ?? '',
+                                      latitude: _event!['latitude'] != null ? double.tryParse(_event!['latitude'].toString()) : null,
+                                      longitude: _event!['longitude'] != null ? double.tryParse(_event!['longitude'].toString()) : null,
+                                      price: priceInt,
+                                      imageUrl: _event!['image_url'],
+                                      createdAt: _event!['created_at'] ?? '',
+                                      category: _event!['category'],
+                                    ),
+                                    count: _ticketCount,
+                                  ),
+                                ),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF9A3412),
+                        disabledBackgroundColor: const Color(0xFFD8D0C8),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        _selectedTicket == null ? 'Pilih Tiket Dulu' : 'Pesan $_ticketCount Tiket',
+                        style: GoogleFonts.manrope(
+                          color: _selectedTicket == null ? const Color(0xFF78706A) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -657,19 +723,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFFAFAF9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(children: [
-          const Icon(LucideIcons.globe, color: Color(0xFF2C3E50)),
+          const Icon(LucideIcons.globe, color: Color(0xFF9A3412)),
           const SizedBox(width: 8),
-          Text(_event!['title'] ?? 'Jam Event',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis),
+          Expanded(
+            child: Text(
+              _event!['title'] ?? 'Jam Event',
+              style: GoogleFonts.ebGaramond(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3A302A),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Jam operasional dalam berbagai zona waktu:',
-                style: TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(
+              'Jam operasional dalam berbagai zona waktu:',
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12),
+            ),
             const SizedBox(height: 16),
             // WIB (base)
             _tzRow('WIB', 'Waktu Indonesia Barat', openMin, closeMin, 0),
@@ -684,7 +761,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text('Tutup', style: GoogleFonts.manrope(color: const Color(0xFF9A3412))),
           ),
         ],
       ),
@@ -707,18 +784,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(zone, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          Text(
+            zone,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: const Color(0xFF3A302A),
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A)),
+          ),
         ]),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF2C3E50),
+            color: const Color(0xFF9A3412),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(timeStr,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          child: Text(
+            timeStr,
+            style: GoogleFonts.manrope(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
         ),
       ],
     );
@@ -737,11 +829,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setStateDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(children: [
-            Icon(LucideIcons.refreshCcw, color: Colors.green),
-            SizedBox(width: 8),
-            Text('Konversi Harga Tiket'),
+          backgroundColor: const Color(0xFFFAFAF9),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [
+            const Icon(LucideIcons.refreshCcw, color: Colors.green),
+            const SizedBox(width: 8),
+            Text(
+              'Konversi Harga Tiket',
+              style: GoogleFonts.ebGaramond(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3A302A),
+              ),
+            ),
           ]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -751,18 +850,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: const Color(0xFFEAE2DA),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
                   children: [
-                    const Text('Harga dalam IDR', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                    Text(
+                      'Harga dalam IDR',
+                      style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 11),
+                    ),
                     Text(
                       'Rp ${_fmtPrice(priceIdr)}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Color(0xFF2C3E50)),
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: const Color(0xFF9A3412),
+                      ),
                     ),
                   ],
                 ),
@@ -771,17 +874,27 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               // Pilih mata uang tujuan
               Row(
                 children: [
-                  const Text('Konversi ke:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text(
+                    'Konversi ke:',
+                    style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: toCurrency,
+                      style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       items: currencies
-                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c, style: GoogleFonts.manrope()),
+                              ))
                           .toList(),
                       onChanged: (v) => setStateDialog(() => toCurrency = v!),
                     ),
@@ -791,7 +904,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               const SizedBox(height: 16),
               // Hasil konversi
               isLoading
-                  ? const CircularProgressIndicator(color: Color(0xFF2C3E50))
+                  ? const CircularProgressIndicator(color: Color(0xFF9A3412))
                   : Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -803,10 +916,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       child: Text(
                         resultText,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.green),
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.green,
+                        ),
                       ),
                     ),
             ],
@@ -814,11 +928,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Tutup', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'Tutup',
+                style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C3E50),
+                backgroundColor: const Color(0xFF9A3412),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () async {
@@ -839,7 +956,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   setStateDialog(() => isLoading = false);
                 }
               },
-              child: const Text('Konversi', style: TextStyle(color: Colors.white)),
+              child: Text(
+                'Konversi',
+                style: GoogleFonts.manrope(color: Colors.white),
+              ),
             ),
           ],
         ),

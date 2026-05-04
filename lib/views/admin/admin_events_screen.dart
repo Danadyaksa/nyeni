@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../config/api_config.dart';
@@ -55,7 +56,11 @@ DateTime? _parseDate(dynamic val) {
   }
 }
 
-const Color _primary = Color(0xFF2C3E50);
+const Color _primary = Color(0xFF9A3412);
+const Color _background = Color(0xFFFAF5EE);
+const Color _cardBorder = Color(0xFFD8D0C8);
+const Color _textPrimary = Color(0xFF3A302A);
+const Color _textSecondary = Color(0xFF78706A);
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
@@ -204,19 +209,24 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Kelola Event',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.w700,
+            color: _primary,
+            fontSize: 20,
+            letterSpacing: -0.5,
+          ),
         ),
-        backgroundColor: _primary,
+        backgroundColor: const Color(0xFFFAFAF9),
         centerTitle: true,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFF78716C)),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Colors.white),
+            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF78716C), size: 20),
             onPressed: _loadEvents,
           ),
         ],
@@ -225,7 +235,13 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
         onPressed: () => _openForm(),
         backgroundColor: _primary,
         icon: const Icon(LucideIcons.plus, color: Colors.white),
-        label: const Text('Tambah Event', style: TextStyle(color: Colors.white)),
+        label: Text(
+          'Tambah Event',
+          style: GoogleFonts.manrope(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: _primary))

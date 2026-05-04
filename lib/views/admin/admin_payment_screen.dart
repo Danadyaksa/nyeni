@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/admin_controller.dart';
 
 class AdminPaymentScreen extends StatefulWidget {
@@ -143,21 +144,46 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message, style: const TextStyle(height: 1.5)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          title,
+          style: GoogleFonts.ebGaramond(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: const Color(0xFF3A302A),
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.manrope(
+            height: 1.5,
+            color: const Color(0xFF605850),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.manrope(
+                color: const Color(0xFF78716C),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: confirmColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text(confirmText, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              confirmText,
+              style: GoogleFonts.manrope(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -171,25 +197,34 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text('Verifikasi Pembayaran',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF2C3E50),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'Verifikasi Pembayaran',
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF9A3412),
+            fontSize: 20,
+            letterSpacing: -0.5,
+          ),
+        ),
+        backgroundColor: const Color(0xFFFAFAF9),
+        iconTheme: const IconThemeData(color: Color(0xFF78716C)),
         centerTitle: true,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Colors.white),
+            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF78716C), size: 20),
             onPressed: _loadTickets,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          indicatorColor: Colors.white,
+          labelColor: const Color(0xFF9A3412),
+          unselectedLabelColor: const Color(0xFF78716C),
+          indicatorColor: const Color(0xFF9A3412),
+          labelStyle: GoogleFonts.manrope(fontWeight: FontWeight.w600, fontSize: 14),
+          unselectedLabelStyle: GoogleFonts.manrope(fontWeight: FontWeight.w400, fontSize: 14),
           tabs: [
             Tab(
               child: Row(
@@ -201,12 +236,16 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.orange,
+                        color: const Color(0xFF9A3412),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${_filterByStatus('PENDING').length}',
-                        style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.manrope(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                 ],
@@ -218,7 +257,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A3412)))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -248,7 +287,10 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
               status == 'PENDING'
                   ? 'Tidak ada tiket yang menunggu verifikasi'
                   : 'Tidak ada tiket $status',
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              style: GoogleFonts.manrope(
+                color: const Color(0xFF78706A),
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -258,7 +300,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
 
     return RefreshIndicator(
       onRefresh: _loadTickets,
-      color: const Color(0xFF2C3E50),
+      color: const Color(0xFF9A3412),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: tickets.length,
@@ -313,12 +355,16 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: status == 'PENDING'
-            ? Border.all(color: Colors.orange.withOpacity(0.4), width: 1.5)
-            : null,
+            ? Border.all(color: const Color(0xFF9A3412).withOpacity(0.3), width: 1.5)
+            : Border.all(color: const Color(0xFFD8D0C8).withOpacity(0.6), width: 1),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: const Color(0xFF3A302A).withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -338,7 +384,11 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
                         children: [
                           Text(
                             ticket['event_name'] ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: const Color(0xFF3A302A),
+                            ),
                           ),
                           // Badge jumlah tiket
                           if (ticketCount > 1) ...[
@@ -346,17 +396,21 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2C3E50).withOpacity(0.08),
+                                color: const Color(0xFFEAE2DA),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(LucideIcons.ticket, size: 11, color: Color(0xFF2C3E50)),
+                                  const Icon(LucideIcons.ticket, size: 11, color: Color(0xFF605850)),
                                   const SizedBox(width: 4),
                                   Text(
                                     '$ticketCount tiket dalam 1 transaksi',
-                                    style: const TextStyle(fontSize: 10, color: Color(0xFF2C3E50), fontWeight: FontWeight.w600),
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 10,
+                                      color: const Color(0xFF605850),
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -377,9 +431,14 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
                         children: [
                           Icon(statusIcon, size: 12, color: statusColor),
                           const SizedBox(width: 4),
-                          Text(statusLabel,
-                              style: TextStyle(
-                                  color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text(
+                            statusLabel,
+                            style: GoogleFonts.manrope(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -550,13 +609,23 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen>
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: 14, color: const Color(0xFF78716C)),
         const SizedBox(width: 8),
-        Text('$label: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          '$label: ',
+          style: GoogleFonts.manrope(
+            color: const Color(0xFF78706A),
+            fontSize: 12,
+          ),
+        ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: const Color(0xFF3A302A),
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),

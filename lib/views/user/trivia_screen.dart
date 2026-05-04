@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/game_controller.dart';
 
@@ -89,7 +90,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
               const SizedBox(height: 16),
               Text(
                 isCorrect ? "Tepat Sekali!" : "Yah, Kurang Tepat!",
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: GoogleFonts.ebGaramond(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A)),
               ),
               
               if (!isCorrect) ...[
@@ -104,11 +105,11 @@ class _TriviaScreenState extends State<TriviaScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Text("Jawaban yang benar adalah:", style: TextStyle(fontSize: 12, color: Colors.red)),
+                      Text("Jawaban yang benar adalah:", style: GoogleFonts.manrope(fontSize: 12, color: Colors.red)),
                       const SizedBox(height: 4),
                       Text(
                         currentQ['ans'], 
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+                        style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -120,24 +121,24 @@ class _TriviaScreenState extends State<TriviaScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C3E50).withOpacity(0.05),
+                  color: const Color(0xFF9A3412).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF2C3E50).withOpacity(0.1)),
+                  border: Border.all(color: const Color(0xFF9A3412).withOpacity(0.1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(LucideIcons.lightbulb, size: 18, color: Colors.amber),
-                        SizedBox(width: 8),
-                        Text("Tahukah Kamu?", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2C3E50))),
+                        const Icon(LucideIcons.lightbulb, size: 18, color: Colors.amber),
+                        const SizedBox(width: 8),
+                        Text("Tahukah Kamu?", style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF9A3412))),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Text(
                       currentQ['fact'], 
-                      style: const TextStyle(fontSize: 13, height: 1.6, color: Colors.black87),
+                      style: GoogleFonts.manrope(fontSize: 13, height: 1.6, color: const Color(0xFF3A302A)),
                       textAlign: TextAlign.justify,
                     ),
                   ],
@@ -152,11 +153,11 @@ class _TriviaScreenState extends State<TriviaScreen> {
                     _nextQuestion();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
+                    backgroundColor: const Color(0xFF9A3412),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text("Lanjut ke Soal Berikutnya", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text("Lanjut ke Soal Berikutnya", style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               )
             ],
@@ -295,10 +296,10 @@ class _TriviaScreenState extends State<TriviaScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text('Nyeni Trivia', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('Nyeni Trivia', style: GoogleFonts.libreBaskerville(fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
+        backgroundColor: const Color(0xFFFAFAF9),
         centerTitle: true,
         elevation: 0,
         leading: _selectedLevel != null ? IconButton(icon: const Icon(LucideIcons.chevronLeft, color: Colors.black), onPressed: () => setState(() => _selectedLevel = null)) : null,
@@ -336,7 +337,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: isLocked ? Colors.grey[300] : const Color(0xFF2C3E50),
+                  backgroundColor: isLocked ? Colors.grey[300] : const Color(0xFF9A3412),
                   child: Text("$level", style: TextStyle(color: isLocked ? Colors.grey[600] : Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                 ),
                 const SizedBox(width: 16),
@@ -344,20 +345,20 @@ class _TriviaScreenState extends State<TriviaScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(titles[index], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : Colors.black)),
+                      Text(titles[index], style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : const Color(0xFF3A302A))),
                       const SizedBox(height: 6),
                       // UI LAMA KAMU TETAP ADA DI SINI
                       Row(
                         children: [
                           Icon(isLocked ? LucideIcons.lock : LucideIcons.playCircle, size: 14, color: isLocked ? Colors.red : Colors.green),
                           const SizedBox(width: 4),
-                          Text(isLocked ? "Terkunci" : "Siap Dimainkan", style: TextStyle(fontSize: 12, color: isLocked ? Colors.red : Colors.green)),
+                          Text(isLocked ? "Terkunci" : "Siap Dimainkan", style: GoogleFonts.manrope(fontSize: 12, color: isLocked ? Colors.red : Colors.green)),
                           const SizedBox(width: 8),
                           if (!isLocked)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-                              child: Text("+100 XP", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber[900])),
+                              child: Text("+100 XP", style: GoogleFonts.manrope(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber[900])),
                             )
                         ],
                       ),
@@ -382,28 +383,28 @@ class _TriviaScreenState extends State<TriviaScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LinearProgressIndicator(value: (_currentQuestionIndex + 1) / 10, color: const Color(0xFF2C3E50), backgroundColor: Colors.grey[200], minHeight: 8, borderRadius: BorderRadius.circular(4)),
+          LinearProgressIndicator(value: (_currentQuestionIndex + 1) / 10, color: const Color(0xFF9A3412), backgroundColor: Colors.grey[200], minHeight: 8, borderRadius: BorderRadius.circular(4)),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Soal ${_currentQuestionIndex + 1} / 10", style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text("Skor: $_correctCount", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
+              Text("Soal ${_currentQuestionIndex + 1} / 10", style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontWeight: FontWeight.bold)),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text("Skor: $_correctCount", style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: Colors.green))),
             ],
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.grey.shade200), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]),
-            child: Text(currentQ['q'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, height: 1.5), textAlign: TextAlign.center),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFD8D0C8)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]),
+            child: Text(currentQ['q'], style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.bold, height: 1.5, color: const Color(0xFF3A302A)), textAlign: TextAlign.center),
           ),
           const SizedBox(height: 32),
           ...currentQ['opts'].map((opt) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: OutlinedButton(
               onPressed: () => _handleAnswer(opt),
-              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), side: const BorderSide(color: Color(0xFF2C3E50), width: 1.5), alignment: Alignment.centerLeft),
-              child: Text(opt, style: const TextStyle(color: Color(0xFF2C3E50), fontWeight: FontWeight.bold, fontSize: 15)),
+              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), side: const BorderSide(color: Color(0xFF9A3412), width: 1.5), alignment: Alignment.centerLeft),
+              child: Text(opt, style: GoogleFonts.manrope(color: const Color(0xFF9A3412), fontWeight: FontWeight.bold, fontSize: 15)),
             ),
           )).toList(),
         ],
@@ -421,25 +422,25 @@ class _TriviaScreenState extends State<TriviaScreen> {
           children: [
             Icon(isPassed ? LucideIcons.trophy : LucideIcons.rotateCcw, size: 90, color: isPassed ? Colors.amber : Colors.orange),
             const SizedBox(height: 24),
-            Text(isPassed ? "PERFECT CLEAR!" : "MISI GAGAL!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: isPassed ? Colors.amber[700] : Colors.orange[800])),
+            Text(isPassed ? "PERFECT CLEAR!" : "MISI GAGAL!", style: GoogleFonts.ebGaramond(fontSize: 28, fontWeight: FontWeight.bold, color: isPassed ? Colors.amber[700] : Colors.orange[800])),
             const SizedBox(height: 8),
-            Text("Kamu berhasil menjawab $_correctCount dari 10 soal", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text("Kamu berhasil menjawab $_correctCount dari 10 soal", style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
             const SizedBox(height: 16),
-            Text(isPassed ? "Luar biasa! Level berikutnya telah terbuka dan +100 XP ditambahkan ke akunmu." : "Kamu harus menjawab 10 soal dengan benar tanpa salah satu pun untuk membuka level berikutnya.", textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, height: 1.5)),
+            Text(isPassed ? "Luar biasa! Level berikutnya telah terbuka dan +100 XP ditambahkan ke akunmu." : "Kamu harus menjawab 10 soal dengan benar tanpa salah satu pun untuk membuka level berikutnya.", textAlign: TextAlign.center, style: GoogleFonts.manrope(color: const Color(0xFF78706A), height: 1.5)),
             const SizedBox(height: 48),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => isPassed ? setState(() => _selectedLevel = null) : _startLevel(_selectedLevel!),
-                icon: Icon(isPassed ? LucideIcons.list : LucideIcons.refreshCw, color: Colors.white),
-                label: Text(isPassed ? "Pilih Level Selanjutnya" : "Coba Lagi (Restart)", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3E50), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                icon: const Icon(LucideIcons.list, color: Colors.white),
+                label: Text(isPassed ? "Pilih Level Selanjutnya" : "Coba Lagi (Restart)", style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9A3412), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               ),
             ),
             if (!isPassed)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: TextButton(onPressed: () => setState(() => _selectedLevel = null), child: const Text("Kembali ke Menu", style: TextStyle(color: Colors.grey))),
+                child: TextButton(onPressed: () => setState(() => _selectedLevel = null), child: Text("Kembali ke Menu", style: GoogleFonts.manrope(color: const Color(0xFF78706A)))),
               )
           ],
         ),

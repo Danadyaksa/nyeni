@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'main_navigation.dart';
 import '../admin/admin_dashboard_screen.dart';
@@ -70,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2C3E50),
+      backgroundColor: const Color(0xFF9A3412),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -79,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -89,9 +90,9 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Nyeni',
-              style: TextStyle(
+              style: GoogleFonts.libreBaskerville(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -99,9 +100,9 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Platform Event & Gamifikasi',
-              style: TextStyle(
+            Text(
+              'Platform Penyedia Tiket Event Kesenian',
+              style: GoogleFonts.manrope(
                 fontSize: 13,
                 color: Colors.white70,
                 letterSpacing: 0.5,

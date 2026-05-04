@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../main.dart' show routeObserver;
 import '../../controllers/event_controller.dart';
 import '../../services/shake_service.dart';
@@ -166,14 +167,14 @@ class _MainNavigationState extends State<MainNavigation>
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                   child: Stack(
                     children: [
-                      Image.network(
+                        Image.network(
                         ApiConfig.normalizeImageUrl(event['image_url']?.toString() ?? ''),
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           height: 180,
-                          color: const Color(0xFF2C3E50),
+                          color: const Color(0xFF9A3412),
                           child: const Icon(LucideIcons.image, color: Colors.white54, size: 48),
                         ),
                       ),
@@ -228,8 +229,8 @@ class _MainNavigationState extends State<MainNavigation>
                           ),
                           child: Text(
                             event['category']?.toString() ?? '',
-                            style: const TextStyle(
-                                color: Color(0xFF2C3E50),
+                            style: GoogleFonts.manrope(
+                                color: const Color(0xFF9A3412),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold),
                           ),
@@ -271,10 +272,10 @@ class _MainNavigationState extends State<MainNavigation>
                       // Judul event
                       Text(
                         event['title']?.toString() ?? '-',
-                        style: const TextStyle(
+                        style: GoogleFonts.ebGaramond(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
+                          color: const Color(0xFF3A302A),
                           height: 1.2,
                         ),
                       ),
@@ -292,14 +293,14 @@ class _MainNavigationState extends State<MainNavigation>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2C3E50).withOpacity(0.08),
+                              color: const Color(0xFF9A3412).withOpacity(0.08),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               priceStr,
-                              style: const TextStyle(
+                              style: GoogleFonts.ebGaramond(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C3E50),
+                                color: const Color(0xFF9A3412),
                                 fontSize: 15,
                               ),
                             ),
@@ -344,22 +345,22 @@ class _MainNavigationState extends State<MainNavigation>
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2C3E50),
+                            backgroundColor: const Color(0xFF9A3412),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                             elevation: 0,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text('Lihat Event',
-                                  style: TextStyle(
+                                  style: GoogleFonts.manrope(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
-                              SizedBox(width: 6),
-                              Icon(LucideIcons.arrowRight,
+                              const SizedBox(width: 6),
+                              const Icon(LucideIcons.arrowRight,
                                   color: Colors.white, size: 16),
                             ],
                           ),
@@ -371,8 +372,8 @@ class _MainNavigationState extends State<MainNavigation>
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Tutup',
-                              style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          child: Text('Tutup',
+                              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13)),
                         ),
                       ),
                     ],
@@ -389,12 +390,12 @@ class _MainNavigationState extends State<MainNavigation>
   Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: 14, color: const Color(0xFF78706A)),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -417,10 +418,10 @@ class _MainNavigationState extends State<MainNavigation>
     if ((index == 0 || index == 3) && token == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kamu harus login dulu untuk membuka fitur ini!'),
-            backgroundColor: Color(0xFF2C3E50),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text('Kamu harus login dulu untuk membuka fitur ini!', style: GoogleFonts.manrope()),
+            backgroundColor: const Color(0xFF9A3412),
+            duration: const Duration(seconds: 2),
           ),
         );
         Navigator.push(
@@ -445,7 +446,7 @@ class _MainNavigationState extends State<MainNavigation>
             MaterialPageRoute(builder: (context) => const BagasScreen()),
           );
         },
-        backgroundColor: const Color(0xFF2C3E50),
+        backgroundColor: const Color(0xFF9A3412),
         elevation: 4,
         shape: const CircleBorder(),
         child: const Icon(LucideIcons.bot, color: Colors.white, size: 28),
@@ -467,16 +468,16 @@ class _MainNavigationState extends State<MainNavigation>
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF2C3E50),
-          unselectedItemColor: Colors.grey.shade400,
+          selectedItemColor: const Color(0xFF9A3412),
+          unselectedItemColor: const Color(0xFF78706A).withOpacity(0.6),
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           showSelectedLabels: true,
           showUnselectedLabels: true,
           selectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+              GoogleFonts.manrope(fontWeight: FontWeight.w600, fontSize: 12),
           unselectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+              GoogleFonts.manrope(fontWeight: FontWeight.normal, fontSize: 12),
           elevation: 0,
           items: const [
             BottomNavigationBarItem(

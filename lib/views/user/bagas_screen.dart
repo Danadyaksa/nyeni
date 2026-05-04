@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:hive_flutter/hive_flutter.dart'; // Murni pakai Hive
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -232,20 +233,26 @@ class _BagasScreenState extends State<BagasScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.bot, color: Color(0xFF2C3E50)),
-            SizedBox(width: 8),
-            Text('Tanya BAGAS', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            const Icon(LucideIcons.bot, color: Color(0xFF9A3412)),
+            const SizedBox(width: 8),
+            Text(
+              'Tanya BAGAS',
+              style: GoogleFonts.libreBaskerville(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3A302A),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFAFAF9),
         centerTitle: true,
         elevation: 1,
-        iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+        iconTheme: const IconThemeData(color: Color(0xFF3A302A)),
         actions: [
           // TOMBOL HAPUS CHAT
           IconButton(
@@ -289,22 +296,22 @@ class _BagasScreenState extends State<BagasScreen> {
                     constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF2C3E50) : Colors.white,
+                      color: isUser ? const Color(0xFF9A3412) : const Color(0xFFFAFAF9),
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
                         bottomLeft: Radius.circular(isUser ? 16 : 4),
                         bottomRight: Radius.circular(isUser ? 4 : 16),
                       ),
-                      border: isUser ? null : Border.all(color: Colors.grey.shade200),
+                      border: isUser ? null : Border.all(color: const Color(0xFFD8D0C8)),
                       boxShadow: [
                         BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))
                       ]
                     ),
                     child: Text(
                       msg['text'] as String,
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
+                      style: GoogleFonts.manrope(
+                        color: isUser ? Colors.white : const Color(0xFF3A302A),
                         height: 1.4,
                       ),
                     ),
@@ -315,14 +322,27 @@ class _BagasScreenState extends State<BagasScreen> {
           ),
           
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2C3E50))),
-                  SizedBox(width: 8),
-                  Text("BAGAS sedang mengetik...", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF9A3412),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "BAGAS sedang mengetik...",
+                    style: GoogleFonts.manrope(
+                      color: const Color(0xFF78706A),
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -330,20 +350,31 @@ class _BagasScreenState extends State<BagasScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]
+              color: const Color(0xFFFAFAF9),
+              border: Border.all(color: const Color(0xFFD8D0C8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                )
+              ]
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _textController,
+                    style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
                     decoration: InputDecoration(
                       hintText: 'Tanya info pameran atau seni...',
-                      hintStyle: const TextStyle(color: Colors.grey),
+                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
                       filled: true,
-                      fillColor: Colors.grey[100],
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      fillColor: const Color(0xFFEAE2DA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     ),
                     onSubmitted: (_) => _sendMessage(),
@@ -354,7 +385,10 @@ class _BagasScreenState extends State<BagasScreen> {
                   onTap: _isLoading ? null : _sendMessage,
                   child: Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: const BoxDecoration(color: Color(0xFF2C3E50), shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF9A3412),
+                      shape: BoxShape.circle,
+                    ),
                     child: const Icon(LucideIcons.send, color: Colors.white, size: 20),
                   ),
                 )

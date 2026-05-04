@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/notification_service.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -34,13 +35,26 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Hapus Semua', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Yakin hapus semua notifikasi?'),
+        backgroundColor: const Color(0xFFFAFAF9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Hapus Semua',
+          style: GoogleFonts.ebGaramond(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3A302A),
+          ),
+        ),
+        content: Text(
+          'Yakin hapus semua notifikasi?',
+          style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -48,7 +62,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
               backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            child: Text(
+              'Hapus',
+              style: GoogleFonts.manrope(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -62,20 +79,29 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Notifikasi',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)),
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3A302A),
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFAFAF9),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+        iconTheme: const IconThemeData(color: Color(0xFF3A302A)),
         actions: [
           if (_notifications.isNotEmpty) ...[
             TextButton(
               onPressed: _markAllRead,
-              child: const Text('Tandai Dibaca', style: TextStyle(color: Color(0xFF2C3E50), fontSize: 12)),
+              child: Text(
+                'Tandai Dibaca',
+                style: GoogleFonts.manrope(
+                  color: const Color(0xFF9A3412),
+                  fontSize: 12,
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(LucideIcons.trash2, color: Colors.red, size: 20),
@@ -102,17 +128,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.bellOff, size: 64, color: Colors.grey.shade300),
+          Icon(LucideIcons.bellOff, size: 64, color: const Color(0xFFD8D0C8)),
           const SizedBox(height: 16),
           Text(
             'Belum ada notifikasi',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            style: GoogleFonts.manrope(
+              color: const Color(0xFF78706A),
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Notifikasi pembayaran & pengingat\ntiket akan muncul di sini',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+            style: GoogleFonts.manrope(
+              color: const Color(0xFF78706A),
+              fontSize: 13,
+            ),
           ),
         ],
       ),
@@ -133,10 +165,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: notif.isRead ? Colors.white : iconColor.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(14),
+          color: notif.isRead ? const Color(0xFFFAFAF9) : iconColor.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: notif.isRead ? Colors.grey.shade200 : iconColor.withOpacity(0.3),
+            color: notif.isRead ? const Color(0xFFD8D0C8) : iconColor.withOpacity(0.3),
             width: notif.isRead ? 1 : 1.5,
           ),
           boxShadow: [
@@ -171,10 +203,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       Expanded(
                         child: Text(
                           notif.title,
-                          style: TextStyle(
+                          style: GoogleFonts.manrope(
                             fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.bold,
                             fontSize: 13,
-                            color: const Color(0xFF2C3E50),
+                            color: const Color(0xFF3A302A),
                           ),
                         ),
                       ),
@@ -192,16 +224,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   const SizedBox(height: 4),
                   Text(
                     notif.body,
-                    style: TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 12,
-                      color: Colors.grey.shade600,
+                      color: const Color(0xFF78706A),
                       height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     timeStr,
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                    style: GoogleFonts.manrope(
+                      fontSize: 10,
+                      color: const Color(0xFF78706A),
+                    ),
                   ),
                 ],
               ),
@@ -234,7 +269,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       case 'promo':
         return Colors.purple;
       default:
-        return const Color(0xFF2C3E50);
+        return const Color(0xFF9A3412);
     }
   }
 

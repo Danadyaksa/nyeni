@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/event_controller.dart';
 import 'event_detail_screen.dart';
 
@@ -217,139 +218,145 @@ class _MapScreenState extends State<MapScreen> {
     double tempRadius = _radiusKm;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(LucideIcons.circleDot, size: 18, color: Color(0xFF2C3E50)),
-                  const SizedBox(width: 8),
-                  const Text('Atur Radius Pencarian',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        builder: (ctx, setSheet) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFAFAF9),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C3E50),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${tempRadius.toStringAsFixed(0)} km',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14),
-                    ),
+                        color: const Color(0xFFD8D0C8),
+                        borderRadius: BorderRadius.circular(2)),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Event dalam radius ${tempRadius.toStringAsFixed(0)} km dari lokasimu',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              const SizedBox(height: 16),
-              // Slider
-              SliderTheme(
-                data: SliderTheme.of(ctx).copyWith(
-                  activeTrackColor: const Color(0xFF2C3E50),
-                  inactiveTrackColor: Colors.grey.shade200,
-                  thumbColor: const Color(0xFF2C3E50),
-                  overlayColor: const Color(0xFF2C3E50).withOpacity(0.1),
-                  trackHeight: 4,
                 ),
-                child: Slider(
-                  value: tempRadius,
-                  min: 1,
-                  max: 50,
-                  divisions: 49,
-                  onChanged: (v) => setSheet(() => tempRadius = v),
-                ),
-              ),
-              // Label min-max
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(height: 16),
+                Row(
                   children: [
-                    Text('1 km', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('10 km', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('25 km', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text('50 km', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    const Icon(LucideIcons.circleDot, size: 18, color: Color(0xFF9A3412)),
+                    const SizedBox(width: 8),
+                    Text('Atur Radius Pencarian',
+                        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF3A302A))),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF9A3412),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${tempRadius.toStringAsFixed(0)} km',
+                        style: GoogleFonts.manrope(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              // Preset cepat
-              Row(
-                children: [5, 10, 15, 25, 50].map((km) {
-                  final selected = tempRadius.round() == km;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setSheet(() => tempRadius = km.toDouble()),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? const Color(0xFF2C3E50)
-                              : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '$km km',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: selected ? Colors.white : Colors.grey,
+                const SizedBox(height: 8),
+                Text(
+                  'Event dalam radius ${tempRadius.toStringAsFixed(0)} km dari lokasimu',
+                  style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                // Slider
+                SliderTheme(
+                  data: SliderTheme.of(ctx).copyWith(
+                    activeTrackColor: const Color(0xFF9A3412),
+                    inactiveTrackColor: const Color(0xFFD8D0C8),
+                    thumbColor: const Color(0xFF9A3412),
+                    overlayColor: const Color(0xFF9A3412).withOpacity(0.1),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: tempRadius,
+                    min: 1,
+                    max: 50,
+                    divisions: 49,
+                    onChanged: (v) => setSheet(() => tempRadius = v),
+                  ),
+                ),
+                // Label min-max
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('1 km', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A))),
+                      Text('10 km', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A))),
+                      Text('25 km', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A))),
+                      Text('50 km', style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Preset cepat
+                Row(
+                  children: [5, 10, 15, 25, 50].map((km) {
+                    final selected = tempRadius.round() == km;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => setSheet(() => tempRadius = km.toDouble()),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFF9A3412)
+                                : const Color(0xFFEAE2DA),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$km km',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.manrope(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: selected ? Colors.white : const Color(0xFF78706A),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() => _radiusKm = tempRadius);
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Terapkan',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
+                    );
+                  }).toList(),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _radiusKm = tempRadius);
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9A3412),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('Terapkan',
+                        style: GoogleFonts.manrope(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -362,7 +369,7 @@ class _MapScreenState extends State<MapScreen> {
     final center = _userLocation ?? _defaultCenter;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       body: Stack(
         children: [
           // ── Peta ──
@@ -391,8 +398,8 @@ class _MapScreenState extends State<MapScreen> {
                       point: _userLocation!,
                       radius: _radiusKm * 1000, // meter
                       useRadiusInMeter: true,
-                      color: const Color(0xFF2C3E50).withOpacity(0.08),
-                      borderColor: const Color(0xFF2C3E50).withOpacity(0.4),
+                      color: const Color(0xFF9A3412).withOpacity(0.08),
+                      borderColor: const Color(0xFF9A3412).withOpacity(0.4),
                       borderStrokeWidth: 1.5,
                     ),
                   ],
@@ -475,10 +482,10 @@ class _MapScreenState extends State<MapScreen> {
                                 children: [
                                   Text(
                                     e['title']?.toString() ?? '-',
-                                    style: const TextStyle(
+                                    style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      color: Color(0xFF2C3E50),
+                                      color: const Color(0xFF3A302A),
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -490,8 +497,8 @@ class _MapScreenState extends State<MapScreen> {
                                     children: [
                                       const Icon(LucideIcons.externalLink, size: 10, color: Colors.blue),
                                       const SizedBox(width: 3),
-                                      const Text('Lihat detail',
-                                          style: TextStyle(fontSize: 10, color: Colors.blue)),
+                                      Text('Lihat detail',
+                                          style: GoogleFonts.manrope(fontSize: 10, color: Colors.blue)),
                                     ],
                                   ),
                                 ],
@@ -544,7 +551,7 @@ class _MapScreenState extends State<MapScreen> {
             right: 0,
             child: Container(
               decoration: const BoxDecoration(
-                color: Color(0xFF2C3E50),
+                color: Color(0xFF9A3412),
                 boxShadow: [
                   BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2)),
                 ],
@@ -556,13 +563,13 @@ class _MapScreenState extends State<MapScreen> {
                   child: Row(
                     children: [
                       // Judul
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Lokasi Event',
-                              style: TextStyle(
+                              style: GoogleFonts.libreBaskerville(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -570,7 +577,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             Text(
                               'Temukan event di sekitarmu',
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Colors.white60,
                                 fontSize: 11,
                               ),
@@ -599,7 +606,7 @@ class _MapScreenState extends State<MapScreen> {
                               const SizedBox(width: 5),
                               Text(
                                 '${_radiusKm.toStringAsFixed(0)} km',
-                                style: const TextStyle(
+                                style: GoogleFonts.manrope(
                                   color: Colors.white,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -644,7 +651,7 @@ class _MapScreenState extends State<MapScreen> {
                                   : _isLoadingLocation
                                       ? 'Mencari...'
                                       : 'Tidak ada',
-                              style: const TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -715,7 +722,7 @@ class _MapScreenState extends State<MapScreen> {
                   _getUserLocation();
                 }
               },
-              backgroundColor: const Color(0xFF2C3E50),
+              backgroundColor: const Color(0xFF9A3412),
               mini: true,
               child: Icon(
                 _userLocation != null ? LucideIcons.navigation : LucideIcons.locateFixed,
@@ -745,12 +752,12 @@ class _MapScreenState extends State<MapScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12)],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2C3E50))),
-            SizedBox(width: 12),
-            Text('Mencari lokasi kamu...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF9A3412))),
+            const SizedBox(width: 12),
+            Text('Mencari lokasi kamu...', style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13)),
           ],
         ),
       );
@@ -767,11 +774,11 @@ class _MapScreenState extends State<MapScreen> {
         ),
         child: Row(
           children: [
-            Icon(LucideIcons.mapPin, color: Colors.grey.shade400, size: 20),
+            Icon(LucideIcons.mapPin, color: const Color(0xFF78706A), size: 20),
             const SizedBox(width: 12),
             Text(
               'Tidak ada event dalam radius ${_radiusKm.toInt()} km dari lokasimu',
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
             ),
           ],
         ),
@@ -812,7 +819,7 @@ class _MapScreenState extends State<MapScreen> {
                 const SizedBox(width: 10),
                 Text(
                   '${nearby.length} Event dalam ${_radiusKm.toInt()} km',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2C3E50)),
+                  style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF3A302A)),
                 ),
               ],
             ),
@@ -838,9 +845,9 @@ class _MapScreenState extends State<MapScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FA),
+                      color: const Color(0xFFFAFAF9),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: const Color(0xFFD8D0C8)),
                     ),
                     child: Row(
                       children: [
@@ -851,16 +858,16 @@ class _MapScreenState extends State<MapScreen> {
                           decoration: BoxDecoration(
                             color: index == 0
                                 ? Colors.orange
-                                : const Color(0xFF2C3E50).withOpacity(0.1),
+                                : const Color(0xFF9A3412).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: Text(
                               '${index + 1}',
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: index == 0 ? Colors.white : const Color(0xFF2C3E50),
+                                color: index == 0 ? Colors.white : const Color(0xFF9A3412),
                               ),
                             ),
                           ),
@@ -873,22 +880,22 @@ class _MapScreenState extends State<MapScreen> {
                             children: [
                               Text(
                                 e['title']?.toString() ?? '-',
-                                style: const TextStyle(
+                                style: GoogleFonts.manrope(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: Color(0xFF2C3E50)),
+                                    color: const Color(0xFF3A302A)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(LucideIcons.mapPin, size: 10, color: Colors.grey),
+                                  const Icon(LucideIcons.mapPin, size: 10, color: Color(0xFF78706A)),
                                   const SizedBox(width: 3),
                                   Expanded(
                                     child: Text(
                                       e['location']?.toString() ?? '-',
-                                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                      style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A)),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -911,7 +918,7 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               child: Text(
                                 _fmtDist(dist),
-                                style: const TextStyle(
+                                style: GoogleFonts.manrope(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.orange),
@@ -951,9 +958,9 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             Text(
               _fmtPrice(displayPrice),
-              style: const TextStyle(
+              style: GoogleFonts.manrope(
                   fontSize: 10,
-                  color: Color(0xFF2C3E50),
+                  color: const Color(0xFF3A302A),
                   fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 3),

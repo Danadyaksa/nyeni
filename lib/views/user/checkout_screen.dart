@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/event_model.dart';
 import '../../controllers/ticket_controller.dart';
@@ -58,38 +59,81 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFFFAFAF9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Instruksi Pembayaran', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                'Instruksi Pembayaran',
+                style: GoogleFonts.ebGaramond(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3A302A),
+                ),
+              ),
               const SizedBox(height: 16),
 
               if (_selectedPayment == 'QRIS') ...[
-                const Text('Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet kamu.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(
+                  'Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet kamu.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
+                ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(16)),
-                  child: const Column(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAE2DA),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
                     children: [
-                      Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF2C3E50)),
-                      SizedBox(height: 8),
-                      Text("QRIS NYENI INDONESIA", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      const Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF9A3412)),
+                      const SizedBox(height: 8),
+                      Text(
+                        "QRIS NYENI INDONESIA",
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: const Color(0xFF3A302A),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ] else ...[
-                const Text('Transfer tepat sesuai nominal ke rekening BCA berikut:', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(
+                  'Transfer tepat sesuai nominal ke rekening BCA berikut:',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
+                ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                  child: const Text("880123456789", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: 2, color: Color(0xFF2C3E50))),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAE2DA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "880123456789",
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      letterSpacing: 2,
+                      color: const Color(0xFF9A3412),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                const Text('a.n. PT Nyeni Indonesia', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                Text(
+                  'a.n. PT Nyeni Indonesia',
+                  style: GoogleFonts.manrope(
+                    color: const Color(0xFF78706A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
 
               const SizedBox(height: 20),
@@ -99,9 +143,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C3E50).withOpacity(0.05),
+                  color: const Color(0xFF9A3412).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF2C3E50).withOpacity(0.2)),
+                  border: Border.all(color: const Color(0xFFD8D0C8)),
                 ),
                 child: Column(
                   children: [
@@ -124,7 +168,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           const SizedBox(width: 6),
                           Text(
                             'Transfer TEPAT Rp ${_formatRp(total)}',
-                            style: const TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.manrope(
+                              color: Colors.orange,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -143,16 +191,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _submitPaymentProof();  
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
+                    backgroundColor: const Color(0xFF9A3412),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Saya Sudah Bayar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'Saya Sudah Bayar',
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                ),
               )
             ],
           ),
@@ -165,17 +222,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(
-          fontSize: 13,
-          color: isBold ? Colors.black87 : Colors.grey[700],
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-        )),
+        Text(
+          label,
+          style: GoogleFonts.manrope(
+            fontSize: 13,
+            color: isBold ? const Color(0xFF3A302A) : const Color(0xFF78706A),
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
         Text(
           isCode ? '+${val.toString().padLeft(3, '0')}' : 'Rp ${_formatRp(val)}',
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             fontSize: isBold ? 15 : 13,
             fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: isCode ? Colors.orange : (isBold ? const Color(0xFF2C3E50) : Colors.black87),
+            color: isCode ? Colors.orange : (isBold ? const Color(0xFF9A3412) : const Color(0xFF3A302A)),
           ),
         ),
       ],
@@ -191,18 +251,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFFFAFAF9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(LucideIcons.clock, color: Colors.orange, size: 70), 
             const SizedBox(height: 16),
-            const Text('Menunggu Verifikasi', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(
+              'Menunggu Verifikasi',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ebGaramond(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3A302A),
+              ),
+            ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Pesanan lu udah masuk bos. Pembayaran lagi dicek Admin. Kalo udah di-acc, tiket otomatis aktif di menu Profile ye!',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, height: 1.5, fontSize: 13),
+              style: GoogleFonts.manrope(
+                color: const Color(0xFF78706A),
+                height: 1.5,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -217,11 +290,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: const Color(0xFF9A3412),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Kembali ke Beranda',
+                  style: GoogleFonts.manrope(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
@@ -282,12 +361,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     int total = totalSebelumKode + _uniqueCode; // total transfer = subtotal + biaya layanan + kode unik
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text("Konfirmasi Pesanan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          "Konfirmasi Pesanan",
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: const Color(0xFF3A302A),
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFAFAF9),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF3A302A)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -306,9 +393,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.event.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(
+                          widget.event.title,
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: const Color(0xFF3A302A),
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text("${widget.count} Tiket • ${widget.event.date}", style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                        Text(
+                          "${widget.count} Tiket • ${widget.event.date}",
+                          style: GoogleFonts.manrope(
+                            color: const Color(0xFF78706A),
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -355,26 +455,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildLabel(String text) => Padding(
     padding: const EdgeInsets.only(top: 32, bottom: 12),
-    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+    child: Text(
+      text,
+      style: GoogleFonts.ebGaramond(
+        fontWeight: FontWeight.bold,
+        fontSize: 15,
+        color: const Color(0xFF3A302A),
+      ),
+    ),
   );
 
   Widget _buildCard({required Widget child}) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: const Color(0xFFFAFAF9),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: Colors.grey.shade200),
+      border: Border.all(color: const Color(0xFFD8D0C8)),
     ),
     child: child,
   );
 
   Widget _buildInfoRow(IconData icon, String label, String value) => Row(
     children: [
-      Icon(icon, size: 20, color: Colors.grey),
+      Icon(icon, size: 20, color: const Color(0xFF78706A)),
       const SizedBox(width: 12),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(
+          label,
+          style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A)),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.manrope(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: const Color(0xFF3A302A),
+          ),
+        ),
       ]),
     ],
   );
@@ -386,21 +503,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2C3E50).withOpacity(0.05) : Colors.white,
+          color: isSelected ? const Color(0xFF9A3412).withOpacity(0.05) : const Color(0xFFFAFAF9),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? const Color(0xFF2C3E50) : Colors.grey.shade200, width: 1.5),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF9A3412) : const Color(0xFFD8D0C8),
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? const Color(0xFF2C3E50) : Colors.grey),
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF9A3412) : const Color(0xFF78706A),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(sub, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(
+                  title,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF3A302A),
+                  ),
+                ),
+                Text(
+                  sub,
+                  style: GoogleFonts.manrope(
+                    fontSize: 11,
+                    color: const Color(0xFF78706A),
+                  ),
+                ),
               ]),
             ),
-            if (isSelected) const Icon(LucideIcons.checkCircle2, color: Color(0xFF2C3E50), size: 20),
+            if (isSelected) const Icon(LucideIcons.checkCircle2, color: Color(0xFF9A3412), size: 20),
           ],
         ),
       ),
@@ -414,23 +549,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         Row(
           children: [
-            Text(label, style: TextStyle(color: isBold ? Colors.black : Colors.grey)),
+            Text(
+              label,
+              style: GoogleFonts.manrope(
+                color: isBold ? const Color(0xFF3A302A) : const Color(0xFF78706A),
+              ),
+            ),
             if (isCode) ...[
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                child: const Text('untuk identifikasi', style: TextStyle(fontSize: 9, color: Colors.orange)),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'untuk identifikasi',
+                  style: GoogleFonts.manrope(fontSize: 9, color: Colors.orange),
+                ),
               ),
             ],
           ],
         ),
         Text(
           isQty ? "x$val" : (isCode ? "+${val.toString().padLeft(3, '0')}" : "Rp ${_formatRp(val)}"),
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             fontWeight: FontWeight.bold,
             fontSize: isBold ? 17 : 14,
-            color: isCode ? Colors.orange : (isBold ? const Color(0xFF2C3E50) : Colors.black),
+            color: isCode ? Colors.orange : (isBold ? const Color(0xFF9A3412) : const Color(0xFF3A302A)),
           ),
         ),
       ],
@@ -439,26 +585,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildBottomBar(int total) => Container(
     padding: const EdgeInsets.all(24),
-    decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.black12))),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFAFAF9),
+      border: Border.all(color: const Color(0xFFD8D0C8)),
+    ),
     child: Row(
       children: [
         Expanded(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text("Total Transfer", style: TextStyle(fontSize: 12, color: Colors.grey)),
-            Text("Rp ${_formatRp(total)}", 
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            Text(
+              "Total Transfer",
+              style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A)),
+            ),
+            Text(
+              "Rp ${_formatRp(total)}",
+              style: GoogleFonts.manrope(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF9A3412),
+              ),
+            ),
           ]),
         ),
         ElevatedButton(
           onPressed: _isProcessing ? null : _showPaymentInstructionDialog,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2C3E50),
+            backgroundColor: const Color(0xFF9A3412),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: _isProcessing 
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : const Text("Bayar Sekarang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            : Text(
+                "Bayar Sekarang",
+                style: GoogleFonts.manrope(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         )
       ],
     ),

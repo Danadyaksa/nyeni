@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:focus_detector/focus_detector.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/auth_controller.dart';
 import '../../config/api_config.dart';
 import '../../controllers/biometric_controller.dart';
@@ -193,28 +194,28 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("Pengaturan Akun",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text("Pengaturan Akun",
+                    style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
                 const SizedBox(height: 16),
                 ListTile(
-                  leading: const Icon(LucideIcons.user),
-                  title: const Text("Ganti Nama"),
+                  leading: const Icon(LucideIcons.user, color: Color(0xFF9A3412)),
+                  title: Text("Ganti Nama", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
                   onTap: () {
                     Navigator.pop(context);
                     _editNameDialog();
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.mail),
-                  title: const Text("Ganti Email"),
+                  leading: const Icon(LucideIcons.mail, color: Color(0xFF9A3412)),
+                  title: Text("Ganti Email", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
                   onTap: () {
                     Navigator.pop(context);
                     _editEmailDialog();
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.lock),
-                  title: const Text("Ganti Password"),
+                  leading: const Icon(LucideIcons.lock, color: Color(0xFF9A3412)),
+                  title: Text("Ganti Password", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
                   onTap: () {
                     Navigator.pop(context);
                     _editPasswordDialog();
@@ -225,11 +226,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (biometricAvailable && userId != null) ...[
                   const Divider(),
                   SwitchListTile(
-                    secondary: const Icon(LucideIcons.fingerprint),
-                    title: const Text("Login Biometric"),
-                    subtitle: const Text("Gunakan sidik jari atau face ID"),
+                    secondary: const Icon(LucideIcons.fingerprint, color: Color(0xFF9A3412)),
+                    title: Text("Login Biometric", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
+                    subtitle: Text("Gunakan sidik jari atau face ID", style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A))),
                     value: biometricEnabled,
-                    activeColor: const Color(0xFF2C3E50),
+                    activeColor: const Color(0xFF9A3412),
                     onChanged: (bool value) async {
                       if (value) {
                         // Enable biometric - simpan credentials
@@ -245,8 +246,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Login biometric dinonaktifkan'),
+                            SnackBar(
+                              content: Text('Login biometric dinonaktifkan', style: GoogleFonts.manrope()),
                               backgroundColor: Colors.orange,
                             ),
                           );
@@ -256,25 +257,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     },
                   ),
                 ],
-                
-                const Divider(),
-                ListTile(
-                  leading: const Icon(LucideIcons.logOut, color: Colors.red),
-                  title: const Text("Keluar",
-                      style: TextStyle(color: Colors.red)),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _authController.logout();
-                    if (mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    }
-                  },
-                ),
               ],
             ),
           );
@@ -296,11 +278,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         builder: (context, setStateDialog) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(LucideIcons.fingerprint, color: Color(0xFF2C3E50), size: 20),
-                SizedBox(width: 8),
-                Text("Aktifkan Login Biometric", style: TextStyle(fontSize: 16)),
+                const Icon(LucideIcons.fingerprint, color: Color(0xFF9A3412), size: 20),
+                const SizedBox(width: 8),
+                Text("Aktifkan Login Biometric", style: GoogleFonts.ebGaramond(fontSize: 16, fontWeight: FontWeight.w600)),
               ],
             ),
             content: Form(
@@ -309,17 +291,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Masukkan password Anda untuk mengaktifkan login biometric',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A)),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: passwordController,
                     obscureText: isObscure,
+                    style: GoogleFonts.manrope(),
                     decoration: InputDecoration(
                       hintText: "Password",
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           isObscure ? LucideIcons.eyeOff : LucideIcons.eye,
@@ -331,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
                       ),
                     ),
                     validator: (v) {
@@ -345,17 +329,19 @@ class _ProfileScreenState extends State<ProfileScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
               ),
               ElevatedButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
                   
-                  Navigator.pop(context);
                   setState(() => _isLoading = true);
+                  Navigator.pop(context);
                   
                   // Verifikasi password TANPA update session
                   final verified = await _authController.verifyPassword(email, passwordController.text.trim());
+                  
+                  setState(() => _isLoading = false);
                   
                   if (verified) {
                     // Password benar, simpan credentials
@@ -365,8 +351,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                     
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Login biometric berhasil diaktifkan! 🎉'),
+                        SnackBar(
+                          content: Text('Login biometric berhasil diaktifkan! 🎉', style: GoogleFonts.manrope()),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -374,21 +360,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   } else {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Password salah, gagal mengaktifkan biometric'),
+                        SnackBar(
+                          content: Text('Password salah, gagal mengaktifkan biometric', style: GoogleFonts.manrope()),
                           backgroundColor: Colors.red,
                         ),
                       );
                     }
                   }
-                  
-                  if (mounted) setState(() => _isLoading = false);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: const Color(0xFF9A3412),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text("Aktifkan", style: TextStyle(color: Colors.white)),
+                child: Text("Aktifkan", style: GoogleFonts.manrope(color: Colors.white)),
               ),
             ],
           );
@@ -405,15 +389,30 @@ class _ProfileScreenState extends State<ProfileScreen>
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Edit Nama"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(LucideIcons.user, color: Color(0xFF9A3412), size: 20),
+            const SizedBox(width: 8),
+            Text("Edit Nama", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A302A))),
+          ],
+        ),
         content: TextField(
             controller: nameController,
-            decoration:
-                const InputDecoration(hintText: "Masukkan nama baru")),
+            style: GoogleFonts.manrope(),
+            decoration: InputDecoration(
+              hintText: "Masukkan nama baru",
+              hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
+              ),
+            )),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Batal")),
+              child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A)))),
           ElevatedButton(
             onPressed: () async {
               if (nameController.text.trim().isEmpty) return;
@@ -434,9 +433,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               }
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C3E50)),
-            child: const Text("Simpan",
-                style: TextStyle(color: Colors.white)),
+                backgroundColor: const Color(0xFF9A3412),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            child: Text("Simpan",
+                style: GoogleFonts.manrope(color: Colors.white)),
           ),
         ],
       ),
@@ -454,11 +454,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(LucideIcons.mail, color: Color(0xFF2C3E50), size: 20),
-            SizedBox(width: 8),
-            Text("Ganti Email", style: TextStyle(fontSize: 18)),
+            const Icon(LucideIcons.mail, color: Color(0xFF9A3412), size: 20),
+            const SizedBox(width: 8),
+            Text("Ganti Email", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600)),
           ],
         ),
         content: Form(
@@ -469,26 +469,28 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Text(
                 'Email saat ini: $currentEmail',
-                style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
+                style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A), fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Masukkan email baru dengan format yang valid',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A)),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: GoogleFonts.manrope(),
                 decoration: InputDecoration(
                   hintText: "contoh@gmail.com",
-                  prefixIcon: const Icon(LucideIcons.mail, size: 18),
+                  hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                  prefixIcon: const Icon(LucideIcons.mail, size: 18, color: Color(0xFF9A3412)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 2),
+                    borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
                   ),
                 ),
                 validator: (v) {
@@ -512,7 +514,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+            child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -531,8 +533,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                   await _fetchUserData();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Email berhasil diubah!'),
+                      SnackBar(
+                        content: Text('Email berhasil diubah!', style: GoogleFonts.manrope()),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -541,7 +543,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(result['error'] ?? 'Gagal mengubah email'),
+                        content: Text(result['error'] ?? 'Gagal mengubah email', style: GoogleFonts.manrope()),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -551,8 +553,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 debugPrint("Error Update Email: $e");
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Koneksi server gagal'),
+                    SnackBar(
+                      content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -562,10 +564,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2C3E50),
+              backgroundColor: const Color(0xFF9A3412),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text("Simpan", style: TextStyle(color: Colors.white)),
+            child: Text("Simpan", style: GoogleFonts.manrope(color: Colors.white)),
           ),
         ],
       ),
@@ -587,11 +589,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         builder: (context, setStateDialog) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(LucideIcons.lock, color: Color(0xFF2C3E50), size: 20),
-                SizedBox(width: 8),
-                Text("Ganti Password", style: TextStyle(fontSize: 18)),
+                const Icon(LucideIcons.lock, color: Color(0xFF9A3412), size: 20),
+                const SizedBox(width: 8),
+                Text("Ganti Password", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600)),
               ],
             ),
             content: Form(
@@ -602,9 +604,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   TextFormField(
                     controller: passController,
                     obscureText: isObscurePass,
+                    style: GoogleFonts.manrope(),
                     decoration: InputDecoration(
                       hintText: "Password Baru (min. 6 karakter)",
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           isObscurePass ? LucideIcons.eyeOff : LucideIcons.eye,
@@ -616,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
                       ),
                     ),
                     validator: (v) {
@@ -629,9 +633,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   TextFormField(
                     controller: confirmPassController,
                     obscureText: isObscureConfirm,
+                    style: GoogleFonts.manrope(),
                     decoration: InputDecoration(
                       hintText: "Ulangi Password Baru",
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           isObscureConfirm ? LucideIcons.eyeOff : LucideIcons.eye,
@@ -643,7 +649,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 2),
+                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
                       ),
                     ),
                     validator: (v) {
@@ -658,7 +664,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -676,8 +682,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                     if (result['error'] == null) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Password berhasil diubah!'),
+                          SnackBar(
+                            content: Text('Password berhasil diubah!', style: GoogleFonts.manrope()),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -686,7 +692,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(result['error'] ?? 'Gagal mengubah password'),
+                            content: Text(result['error'] ?? 'Gagal mengubah password', style: GoogleFonts.manrope()),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -696,8 +702,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                     debugPrint("Error Update Password: $e");
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Koneksi server gagal'),
+                        SnackBar(
+                          content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -707,10 +713,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: const Color(0xFF9A3412),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                child: Text("Simpan", style: GoogleFonts.manrope(color: Colors.white)),
               ),
             ],
           );
@@ -736,7 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (filteredTickets.isEmpty) {
       return Center(
           child: Text("Kaga ada tiket $statusFilter nih pak",
-              style: const TextStyle(color: Colors.grey)));
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A))));
     }
 
     // Normalisasi URL localhost → IP server yang dipakai app
@@ -828,18 +834,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(ticket['event_name'] ?? 'Nama Acara',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                          style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF3A302A))),
                       const SizedBox(height: 4),
                       Text(ticket['event_date'] ?? 'Tanggal',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.grey)),
+                          style: GoogleFonts.manrope(
+                              fontSize: 12, color: const Color(0xFF78706A))),
                       const SizedBox(height: 8),
                       statusBadge,
                     ],
                   ),
                 ),
-                const Icon(LucideIcons.chevronRight, color: Colors.grey),
+                Icon(LucideIcons.chevronRight, color: const Color(0xFF78706A)),
               ],
             ),
           ),
@@ -856,7 +862,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(label,
-          style: TextStyle(
+          style: GoogleFonts.manrope(
               color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
@@ -875,10 +881,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             const Center(
                 child: Icon(LucideIcons.clock, color: Colors.orange, size: 50)),
             const SizedBox(height: 16),
-            const Center(
+            Center(
                 child: Text("Detail Pembayaran",
-                    style: TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold))),
+                    style: GoogleFonts.ebGaramond(
+                        fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A)))),
             const SizedBox(height: 24),
             _buildDetailRow("Acara", ticket['event_name']),
             _buildDetailRow("Tanggal", ticket['event_date']),
@@ -890,12 +896,12 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
+                    backgroundColor: const Color(0xFF9A3412),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12))),
-                child: const Text("Tutup",
-                    style: TextStyle(color: Colors.white)),
+                child: Text("Tutup",
+                    style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             )
           ],
@@ -911,10 +917,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13)),
           Text(value,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13)),
+              style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF3A302A))),
         ],
       ),
     );
@@ -951,26 +957,32 @@ class _ProfileScreenState extends State<ProfileScreen>
       onFocusGained: _fetchUserData,
       child: _isLoading
           ? const Scaffold(
-              body: Center(child: CircularProgressIndicator()))
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF9A3412))))
           : Scaffold(
-              backgroundColor: const Color(0xFFFBFBFB),
+              backgroundColor: const Color(0xFFFAF5EE),
               appBar: AppBar(
-                title: const Text("Profil Saya",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black)),
+                title: Text("Profil Saya",
+                    style: GoogleFonts.libreBaskerville(
+                        fontWeight: FontWeight.bold, color: const Color(0xFF9A3412), fontSize: 20)),
                 centerTitle: true,
                 elevation: 0,
-                backgroundColor: Colors.white,
+                backgroundColor: const Color(0xFFFAFAF9),
+                actions: [
+                  IconButton(
+                    icon: const Icon(LucideIcons.settings, color: Color(0xFF9A3412)),
+                    onPressed: _showSettingsModal,
+                  ),
+                ],
               ),
               body: Column(
                 children: [
                   // ── Header profil ──
                   Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.all(24.0),
-                    child: Row(
+                    color: const Color(0xFFFAFAF9),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                    child: Column(
                       children: [
-                        // Avatar
+                        // Avatar di tengah atas
                         Stack(
                           children: [
                             Container(
@@ -982,44 +994,59 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   borderColor
                                 ]),
                                 boxShadow: [
+                                  // Inner glow
+                                  BoxShadow(
+                                      color: borderColor.withOpacity(0.6),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 0)),
+                                  // Outer glow
                                   BoxShadow(
                                       color: borderColor.withOpacity(0.4),
-                                      blurRadius: 8)
+                                      blurRadius: 30,
+                                      spreadRadius: 5,
+                                      offset: const Offset(0, 4)),
+                                  // Extra glow layer
+                                  BoxShadow(
+                                      color: borderColor.withOpacity(0.2),
+                                      blurRadius: 40,
+                                      spreadRadius: 8,
+                                      offset: const Offset(0, 6)),
                                 ],
                               ),
                               child: ClipOval(
                                 child: _isUploadingImage
                                     ? Container(
-                                        width: 80,
-                                        height: 80,
-                                        color: Colors.grey[200],
+                                        width: 90,
+                                        height: 90,
+                                        color: const Color(0xFFEAE2DA),
                                         child: const Center(
                                             child:
-                                                CircularProgressIndicator()))
+                                                CircularProgressIndicator(color: Color(0xFF9A3412))))
                                     : (avatarUrl != null &&
                                             avatarUrl.isNotEmpty
                                         ? Image.network(
                                             ApiConfig.normalizeImageUrl(avatarUrl),
-                                            width: 80,
-                                            height: 80,
+                                            width: 90,
+                                            height: 90,
                                             fit: BoxFit.cover,
                                             errorBuilder: (_, __, ___) =>
                                                 Container(
-                                                    width: 80,
-                                                    height: 80,
-                                                    color: Colors.grey[200],
+                                                    width: 90,
+                                                    height: 90,
+                                                    color: const Color(0xFFEAE2DA),
                                                     child: const Icon(
                                                         LucideIcons.user,
-                                                        size: 40,
-                                                        color: Colors.grey)),
+                                                        size: 45,
+                                                        color: Color(0xFF78706A))),
                                           )
                                         : Container(
-                                            width: 80,
-                                            height: 80,
-                                            color: Colors.grey[200],
+                                            width: 90,
+                                            height: 90,
+                                            color: const Color(0xFFEAE2DA),
                                             child: const Icon(LucideIcons.user,
-                                                size: 40,
-                                                color: Colors.grey))),
+                                                size: 45,
+                                                color: Color(0xFF78706A)))),
                               ),
                             ),
                             Positioned(
@@ -1028,78 +1055,67 @@ class _ProfileScreenState extends State<ProfileScreen>
                               child: GestureDetector(
                                 onTap: _pickImage,
                                 child: const CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor: Color(0xFF2C3E50),
+                                    radius: 15,
+                                    backgroundColor: Color(0xFF9A3412),
                                     child: Icon(LucideIcons.camera,
-                                        size: 14, color: Colors.white)),
+                                        size: 15, color: Colors.white)),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(width: 20),
-                        // Info nama + XP
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                        _userData?['full_name'] ?? 'User',
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold),
-                                        overflow: TextOverflow.ellipsis),
-                                  ),
-                                  // Tombol settings (ganti nama/email/password/logout)
-                                  IconButton(
-                                    icon: const Icon(LucideIcons.settings,
-                                        size: 18),
-                                    onPressed: _showSettingsModal,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                                ],
+                        const SizedBox(height: 12),
+                        
+                        // Nama besar di tengah (tanpa settings icon)
+                        Text(
+                            _userData?['full_name'] ?? 'User',
+                            style: GoogleFonts.ebGaramond(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF3A302A)),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1),
+                        const SizedBox(height: 14),
+                        
+                        // Level dan XP bar
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Level $currentLevel',
+                                    style: GoogleFonts.manrope(
+                                        fontWeight: FontWeight.bold,
+                                        color: borderColor,
+                                        fontSize: 13)),
+                                Text("$totalXp / $xpTarget XP",
+                                    style: GoogleFonts.manrope(
+                                        fontSize: 11,
+                                        color: const Color(0xFF78706A),
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xFFD8D0C8),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    borderColor),
                               ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Level $currentLevel',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: borderColor,
-                                          fontSize: 12)),
-                                  Text("$totalXp / $xpTarget XP",
-                                      style: const TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.grey[200],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      borderColor),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                  currentLevel >= 10
-                                      ? "Level Maksimal!"
-                                      : "${xpTarget - totalXp} XP lagi buat naik level",
-                                  style: const TextStyle(
-                                      fontSize: 10, color: Colors.grey)),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                                currentLevel >= 10
+                                    ? "Level Maksimal!"
+                                    : "${xpTarget - totalXp} XP lagi buat naik level",
+                                style: GoogleFonts.manrope(
+                                    fontSize: 10, 
+                                    color: const Color(0xFF78706A),
+                                    fontStyle: currentLevel >= 10 ? FontStyle.italic : FontStyle.normal)),
+                          ],
                         ),
                       ],
                     ),
@@ -1109,12 +1125,14 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                   // ── Tab bar ──
                   Container(
-                    color: Colors.white,
+                    color: const Color(0xFFFAFAF9),
                     child: TabBar(
                       controller: _tabController,
-                      labelColor: const Color(0xFF2C3E50),
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: const Color(0xFF2C3E50),
+                      labelColor: const Color(0xFF9A3412),
+                      unselectedLabelColor: const Color(0xFF78706A),
+                      indicatorColor: const Color(0xFF9A3412),
+                      labelStyle: GoogleFonts.manrope(fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: GoogleFonts.manrope(),
                       tabs: const [
                         Tab(text: "Pending"),
                         Tab(text: "Aktif"),
@@ -1153,9 +1171,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         .toList();
 
     if (historyTickets.isEmpty) {
-      return const Center(
+      return Center(
           child: Text("Belum ada riwayat tiket",
-              style: TextStyle(color: Colors.grey)));
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A))));
     }
 
     final String serverHost = ProfileController.baseUrl.replaceAll('/api', '');
@@ -1218,12 +1236,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(ticket['event_name'] ?? 'Nama Acara',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                        style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF3A302A))),
                     const SizedBox(height: 4),
                     Text(ticket['event_date'] ?? 'Tanggal',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.grey)),
+                        style: GoogleFonts.manrope(
+                            fontSize: 12, color: const Color(0xFF78706A))),
                     const SizedBox(height: 8),
                     _buildBadge(badgeLabel, badgeColor),
                   ],

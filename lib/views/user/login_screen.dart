@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'main_navigation.dart';
 import '../admin/admin_dashboard_screen.dart';
@@ -131,14 +132,15 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Aktifkan Login Biometric?'),
-        content: const Text(
+        title: Text('Aktifkan Login Biometric?', style: GoogleFonts.ebGaramond(fontWeight: FontWeight.w600)),
+        content: Text(
           'Gunakan sidik jari atau face ID untuk login lebih cepat di masa depan.',
+          style: GoogleFonts.manrope(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Nanti Saja'),
+            child: Text('Nanti Saja', style: GoogleFonts.manrope()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -156,9 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2C3E50),
+              backgroundColor: const Color(0xFF9A3412),
             ),
-            child: const Text('Aktifkan', style: TextStyle(color: Colors.white)),
+            child: Text('Aktifkan', style: GoogleFonts.manrope(color: Colors.white)),
           ),
         ],
       ),
@@ -168,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
@@ -186,22 +188,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2C3E50).withOpacity(0.08),
+                          color: const Color(0xFF9A3412).withOpacity(0.08),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(LucideIcons.palette,
-                            size: 44, color: Color(0xFF2C3E50)),
+                            size: 44, color: Color(0xFF9A3412)),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         'Masuk ke Nyeni',
-                        style: TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.ebGaramond(
+                            fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A)),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      Text(
                         'Selamat datang kembali!',
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
                       ),
                     ],
                   ),
@@ -266,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2C3E50),
+                      backgroundColor: const Color(0xFF9A3412),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -277,9 +279,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2))
-                        : const Text(
+                        : Text(
                             'Masuk',
-                            style: TextStyle(
+                            style: GoogleFonts.manrope(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15),
@@ -295,10 +297,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _isLoading ? null : _handleBiometricLogin,
                       icon: const Icon(LucideIcons.fingerprint, size: 20),
-                      label: const Text('Masuk dengan Biometric'),
+                      label: Text('Masuk dengan Biometric', style: GoogleFonts.manrope()),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2C3E50),
-                        side: const BorderSide(color: Color(0xFF2C3E50)),
+                        foregroundColor: const Color(0xFF9A3412),
+                        side: const BorderSide(color: Color(0xFF9A3412)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -318,9 +320,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(
                           builder: (_) => const RegisterScreen()),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Belum punya akun? Daftar di sini',
-                      style: TextStyle(color: Color(0xFF2C3E50)),
+                      style: GoogleFonts.manrope(color: const Color(0xFF9A3412)),
                     ),
                   ),
                 ),
@@ -334,10 +336,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _label(String text) => Text(
         text,
-        style: const TextStyle(
+        style: GoogleFonts.manrope(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: Color(0xFF2C3E50)),
+            color: const Color(0xFF3A302A)),
       );
 
   InputDecoration _inputDecoration({
@@ -347,22 +349,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-      prefixIcon: Icon(icon, size: 18, color: Colors.grey),
+      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A).withOpacity(0.6), fontSize: 13),
+      prefixIcon: Icon(icon, size: 18, color: const Color(0xFF78706A)),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

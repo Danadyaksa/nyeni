@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/auth_controller.dart';
 import '../user/login_screen.dart';
 
@@ -16,22 +17,22 @@ class MoreMenuSheet {
       builder: (context) => Container(
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFFAFAF9),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20)],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(margin: const EdgeInsets.only(top: 12, bottom: 8), width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-            const Padding(padding: EdgeInsets.all(16.0), child: Text("Menu Lainnya", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)))),
-            const Divider(height: 1),
-            _buildMenuTile(context, LucideIcons.refreshCcw, "Konversi Mata Uang", Colors.green, () => _showCurrencyDialog(context)),
-            _buildMenuTile(context, LucideIcons.clock, "Konversi Waktu", Colors.blue, () => _showTimeDialog(context)),
-            _buildMenuTile(context, LucideIcons.messageSquare, "Kritik & Saran TPM", Colors.orange, () => _showFeedbackDialog(context)),
-            _buildMenuTile(context, LucideIcons.info, "About Us", Colors.purple, () => _showAboutDialog(context)),
-            _buildMenuTile(context, LucideIcons.mail, "Kontak Kami", Colors.teal, () => _showContactDialog(context)),
-            const Divider(),
+            Container(margin: const EdgeInsets.only(top: 12, bottom: 8), width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFD8D0C8), borderRadius: BorderRadius.circular(10))),
+            Padding(padding: const EdgeInsets.all(16.0), child: Text("Menu Lainnya", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A)))),
+            const Divider(height: 1, color: Color(0xFFD8D0C8)),
+            _buildMenuTile(context, LucideIcons.refreshCcw, "Konversi Mata Uang", const Color(0xFF9A3412), () => _showCurrencyDialog(context)),
+            _buildMenuTile(context, LucideIcons.clock, "Konversi Waktu", const Color(0xFF9A3412), () => _showTimeDialog(context)),
+            _buildMenuTile(context, LucideIcons.messageSquare, "Kritik & Saran TPM", const Color(0xFF9A3412), () => _showFeedbackDialog(context)),
+            _buildMenuTile(context, LucideIcons.info, "About Us", const Color(0xFF9A3412), () => _showAboutDialog(context)),
+            _buildMenuTile(context, LucideIcons.mail, "Kontak Kami", const Color(0xFF9A3412), () => _showContactDialog(context)),
+            const Divider(color: Color(0xFFD8D0C8)),
             _buildMenuTile(context, LucideIcons.logOut, "Keluar", Colors.red, () async {
               await AuthController().logout();
               if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
@@ -46,8 +47,8 @@ class MoreMenuSheet {
   static Widget _buildMenuTile(BuildContext context, IconData icon, String title, Color color, VoidCallback onTap, {bool isLogout = false}) {
     return ListTile(
       leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 20)),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: isLogout ? Colors.red : const Color(0xFF2C3E50))),
-      trailing: const Icon(LucideIcons.chevronRight, size: 16, color: Colors.grey),
+      title: Text(title, style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: isLogout ? Colors.red : const Color(0xFF3A302A))),
+      trailing: Icon(LucideIcons.chevronRight, size: 16, color: const Color(0xFF78706A)),
       onTap: () {
         if (isLogout) Navigator.pop(context); 
         onTap();
@@ -69,39 +70,54 @@ class MoreMenuSheet {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(children: [Icon(LucideIcons.refreshCcw, color: Colors.green), SizedBox(width: 8), Text("Konversi Kurs")]),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [const Icon(LucideIcons.refreshCcw, color: Color(0xFF9A3412)), const SizedBox(width: 8), Text("Konversi Kurs", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A302A)))]),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Jumlah", border: OutlineInputBorder())),
+              TextField(
+                controller: amountCtrl, 
+                keyboardType: TextInputType.number, 
+                style: GoogleFonts.manrope(),
+                decoration: InputDecoration(
+                  labelText: "Jumlah", 
+                  labelStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
+                  ),
+                )
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   DropdownButton<String>(
                     value: fromCurrency,
-                    items: ['USD', 'EUR', 'GBP', 'JPY', 'IDR'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                    style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
+                    items: ['USD', 'EUR', 'GBP', 'JPY', 'IDR'].map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.manrope()))).toList(),
                     onChanged: (val) => setState(() => fromCurrency = val!),
                   ),
-                  const Icon(LucideIcons.arrowRightLeft, color: Colors.grey),
+                  const Icon(LucideIcons.arrowRightLeft, color: Color(0xFF78706A)),
                   DropdownButton<String>(
                     value: toCurrency,
-                    items: ['USD', 'EUR', 'GBP', 'JPY', 'IDR'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                    style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
+                    items: ['USD', 'EUR', 'GBP', 'JPY', 'IDR'].map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.manrope()))).toList(),
                     onChanged: (val) => setState(() => toCurrency = val!),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
               isLoading 
-                ? const CircularProgressIndicator()
-                : Container(padding: const EdgeInsets.all(12), width: double.infinity, decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Text(resultText, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green))),
+                ? const CircularProgressIndicator(color: Color(0xFF9A3412))
+                : Container(padding: const EdgeInsets.all(12), width: double.infinity, decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.withOpacity(0.3))), child: Text(resultText, textAlign: TextAlign.center, style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green))),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Tutup")),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text("Tutup", style: GoogleFonts.manrope(color: const Color(0xFF78706A)))),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3E50)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9A3412), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
               onPressed: () async {
                 if (amountCtrl.text.isEmpty) return;
                 setState(() => isLoading = true);
@@ -119,7 +135,7 @@ class MoreMenuSheet {
                   setState(() => isLoading = false);
                 }
               },
-              child: const Text("Konversi", style: TextStyle(color: Colors.white)),
+              child: Text("Konversi", style: GoogleFonts.manrope(color: Colors.white)),
             )
           ],
         ),
@@ -164,7 +180,7 @@ class MoreMenuSheet {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Row(children: [
-              Icon(LucideIcons.clock, color: Colors.blue),
+              Icon(LucideIcons.clock, color: Color(0xFF9A3412)),
               SizedBox(width: 8),
               Text("Konversi Waktu"),
             ]),
@@ -389,33 +405,37 @@ class MoreMenuSheet {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(LucideIcons.code2, size: 60, color: Color(0xFF2C3E50)),
+            const Icon(LucideIcons.code2, size: 60, color: Color(0xFF9A3412)),
             const SizedBox(height: 16),
-            const Text("Aplikasi Nyeni", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text("Aplikasi Nyeni", style: GoogleFonts.ebGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
             const SizedBox(height: 8),
-            const Text("Dikembangkan untuk memenuhi tugas mata kuliah TPM.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            Text("Dikembangkan untuk memenuhi tugas mata kuliah TPM.", textAlign: TextAlign.center, style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
             const SizedBox(height: 24),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Column(
+              decoration: BoxDecoration(
+                color: const Color(0xFF9A3412).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF9A3412).withOpacity(0.3)),
+              ),
+              child: Column(
                 children: [
-                  Text("Mohammad Atilla Danadyaksa", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple), textAlign: TextAlign.center),
-                  Text("123230134", style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
-                  SizedBox(height: 12),
-                  Text("Dida Attallah Elfasdi", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple), textAlign: TextAlign.center),
-                  Text("123230145", style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+                  Text("Mohammad Atilla Danadyaksa", style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: const Color(0xFF9A3412)), textAlign: TextAlign.center),
+                  Text("123230134", style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12), textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  Text("Dida Attallah Elfasdi", style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: const Color(0xFF9A3412)), textAlign: TextAlign.center),
+                  Text("123230145", style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12), textAlign: TextAlign.center),
                 ],
               ),
             )
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Tutup"))],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Tutup", style: GoogleFonts.manrope(color: const Color(0xFF78706A))))],
       ),
     );
   }
@@ -427,21 +447,21 @@ class MoreMenuSheet {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
           children: [
-            Icon(LucideIcons.mail, color: Colors.teal),
-            SizedBox(width: 8),
-            Text("Kontak Kami"),
+            const Icon(LucideIcons.mail, color: Color(0xFF9A3412)),
+            const SizedBox(width: 8),
+            Text("Kontak Kami", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A302A))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Ada kendala atau pertanyaan? Hubungi kami melalui:",
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 14),
             ),
             const SizedBox(height: 20),
             
@@ -449,9 +469,9 @@ class MoreMenuSheet {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.teal.withOpacity(0.1),
+                color: const Color(0xFF9A3412).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFF9A3412).withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,29 +481,29 @@ class MoreMenuSheet {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.teal,
+                          color: const Color(0xFF9A3412),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(LucideIcons.mail, color: Colors.white, size: 20),
                       ),
                       const SizedBox(width: 12),
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             "Email Support",
-                            style: TextStyle(
+                            style: GoogleFonts.manrope(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: Colors.teal,
+                              color: const Color(0xFF9A3412),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             "support@nyeni.app",
-                            style: TextStyle(
+                            style: GoogleFonts.manrope(
                               fontSize: 13,
-                              color: Color(0xFF2C3E50),
+                              color: const Color(0xFF3A302A),
                             ),
                           ),
                         ],
@@ -491,9 +511,9 @@ class MoreMenuSheet {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     "Kami akan merespons dalam 1-2 hari kerja",
-                    style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+                    style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A), fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -505,17 +525,18 @@ class MoreMenuSheet {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
+                color: const Color(0xFF9A3412).withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF9A3412).withOpacity(0.2)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(LucideIcons.info, size: 16, color: Colors.blue),
-                  SizedBox(width: 8),
+                  const Icon(LucideIcons.info, size: 16, color: Color(0xFF9A3412)),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "Sertakan screenshot jika ada error untuk mempercepat penanganan",
-                      style: TextStyle(fontSize: 11, color: Colors.blue),
+                      style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF9A3412)),
                     ),
                   ),
                 ],
@@ -526,7 +547,7 @@ class MoreMenuSheet {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Tutup"),
+            child: Text("Tutup", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
           ),
         ],
       ),
@@ -670,27 +691,27 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         height: MediaQuery.of(context).size.height * 0.75, 
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(children: [Icon(LucideIcons.messageSquare, color: Colors.orange), SizedBox(width: 8), Text("Forum Review TPM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))]),
-                CloseButton()
+                Row(children: [const Icon(LucideIcons.messageSquare, color: Color(0xFF9A3412)), const SizedBox(width: 8), Text("Forum Review TPM", style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF3A302A)))]),
+                const CloseButton()
               ],
             ),
-            const Divider(),
+            const Divider(color: Color(0xFFD8D0C8)),
             
             // LIST REVIEW DARI DATABASE
             Expanded(
               child: _isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A3412)))
                 : _feedbacks.isEmpty
-                  ? const Center(child: Text("Belum ada saran, jadilah yang pertama!", style: TextStyle(color: Colors.grey)))
+                  ? Center(child: Text("Belum ada saran, jadilah yang pertama!", style: GoogleFonts.manrope(color: const Color(0xFF78706A))))
                   : ListView.builder(
                       itemCount: _feedbacks.length,
                       itemBuilder: (context, index) {
@@ -701,7 +722,7 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: isMe ? Colors.orange.withOpacity(0.05) : Colors.grey[100], borderRadius: BorderRadius.circular(12), border: Border.all(color: isMe ? Colors.orange.withOpacity(0.3) : Colors.transparent)),
+                          decoration: BoxDecoration(color: isMe ? Colors.orange.withOpacity(0.05) : const Color(0xFFFAFAF9), borderRadius: BorderRadius.circular(12), border: Border.all(color: isMe ? Colors.orange.withOpacity(0.3) : const Color(0xFFD8D0C8))),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -709,17 +730,17 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(child: Text(fb['username'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isMe ? Colors.orange[800] : const Color(0xFF2C3E50)), overflow: TextOverflow.ellipsis)),
+                                  Expanded(child: Text(fb['username'], style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 13, color: isMe ? Colors.orange[800] : const Color(0xFF3A302A)), overflow: TextOverflow.ellipsis)),
                                   _buildStarDisplay(userRating),
                                 ],
                               ),
                               const SizedBox(height: 2),
                               if (fb['created_at'] != null)
-                                Text(_formatDate(fb['created_at']), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                Text(_formatDate(fb['created_at']), style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A))),
                               const SizedBox(height: 8),
                               
                               // Isi Pesan
-                              Text(fb['feedback'], style: const TextStyle(fontSize: 14)),
+                              Text(fb['feedback'], style: GoogleFonts.manrope(fontSize: 14, color: const Color(0xFF3A302A))),
                             ],
                           ),
                         );
@@ -731,13 +752,13 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
             Container(
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade300)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFD8D0C8))),
               child: Column(
                 children: [
                   // RATING BINTANG YANG BISA DI-SLIDE ATAU DI-KLIK!
                   Row(
                     children: [
-                      const Text("Rating:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      Text("Rating:", style: GoogleFonts.manrope(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF78706A))),
                       const SizedBox(width: 8),
                       Expanded(
                         // Ini dia rahasianya: GestureDetector membungkus barisan bintang!
@@ -767,7 +788,7 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                        child: Text(_selectedRating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 12)),
+                        child: Text(_selectedRating.toStringAsFixed(1), style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 12)),
                       )
                     ],
                   ),
@@ -779,14 +800,15 @@ class _FeedbackForumWidgetState extends State<FeedbackForumWidget> {
                       Expanded(
                         child: TextField(
                           controller: _feedbackCtrl,
-                          decoration: const InputDecoration(hintText: "Tulis saranmu di sini...", border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+                          style: GoogleFonts.manrope(),
+                          decoration: InputDecoration(hintText: "Tulis saranmu di sini...", hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)), border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
                           onSubmitted: (_) => _submitFeedback(),
                         ),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: _submitFeedback,
-                        child: const CircleAvatar(radius: 16, backgroundColor: Color(0xFF2C3E50), child: Icon(LucideIcons.send, color: Colors.white, size: 14)),
+                        child: const CircleAvatar(radius: 16, backgroundColor: Color(0xFF9A3412), child: Icon(LucideIcons.send, color: Colors.white, size: 14)),
                       )
                     ],
                   )

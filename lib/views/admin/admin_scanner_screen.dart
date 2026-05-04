@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/admin_controller.dart';
 
 class AdminScannerScreen extends StatefulWidget {
@@ -86,15 +87,18 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
             ),
             const SizedBox(height: 16),
             Text(result.title,
-                style: TextStyle(
+                style: GoogleFonts.ebGaramond(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: result.isSuccess ? Colors.green : Colors.red,
                 )),
             const SizedBox(height: 8),
             Text(result.message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey, height: 1.5)),
+                style: GoogleFonts.manrope(
+                  color: const Color(0xFF78706A),
+                  height: 1.5,
+                )),
             if (result.eventName != null) ...[
               const SizedBox(height: 16),
               Container(
@@ -135,7 +139,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
                   _scannerCtrl.start();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: const Color(0xFF9A3412),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -153,7 +157,15 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Scan QR Tiket', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(
+          'Scan QR Tiket',
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            fontSize: 20,
+            letterSpacing: -0.5,
+          ),
+        ),
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
@@ -281,7 +293,7 @@ class _ScannerOverlayPainter extends CustomPainter {
 
     // Corner accents
     final cornerPaint = Paint()
-      ..color = const Color(0xFF2C3E50)
+      ..color = const Color(0xFF9A3412)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;

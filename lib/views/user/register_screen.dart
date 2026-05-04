@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/auth_controller.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -71,11 +72,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+        iconTheme: const IconThemeData(color: Color(0xFF9A3412)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
@@ -91,19 +92,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2C3E50).withOpacity(0.08),
+                        color: const Color(0xFF9A3412).withOpacity(0.08),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(LucideIcons.userPlus,
-                          size: 40, color: Color(0xFF2C3E50)),
+                          size: 40, color: Color(0xFF9A3412)),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Buat Akun Nyeni',
-                        style: TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.bold)),
+                    Text('Buat Akun Nyeni',
+                        style: GoogleFonts.ebGaramond(
+                            fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
                     const SizedBox(height: 6),
-                    const Text('Daftar dan mulai jelajahi event seni',
-                        style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text('Daftar dan mulai jelajahi event seni',
+                        style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13)),
                   ],
                 ),
               ),
@@ -209,18 +210,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: const Color(0xFF9A3412).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFD8D0C8)),
                 ),
                 child: Row(
                   children: [
                     Icon(LucideIcons.info,
-                        size: 14, color: Colors.blue.shade400),
+                        size: 14, color: const Color(0xFF9A3412)),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Password minimal 8 karakter. Gunakan kombinasi huruf dan angka untuk keamanan lebih baik.',
-                        style: TextStyle(fontSize: 11, color: Colors.blueGrey),
+                        style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A)),
                       ),
                     ),
                   ],
@@ -234,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
+                    backgroundColor: const Color(0xFF9A3412),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -245,8 +247,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text('Daftar Sekarang',
-                          style: TextStyle(
+                      : Text('Daftar Sekarang',
+                          style: GoogleFonts.manrope(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 15)),
@@ -256,9 +258,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
+                  child: Text(
                     'Sudah punya akun? Masuk di sini',
-                    style: TextStyle(color: Color(0xFF2C3E50)),
+                    style: GoogleFonts.manrope(color: const Color(0xFF9A3412)),
                   ),
                 ),
               ),
@@ -271,10 +273,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _label(String text) => Text(
         text,
-        style: const TextStyle(
+        style: GoogleFonts.manrope(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: Color(0xFF2C3E50)),
+            color: const Color(0xFF3A302A)),
       );
 
   InputDecoration _inputDecoration({
@@ -284,22 +286,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-      prefixIcon: Icon(icon, size: 18, color: Colors.grey),
+      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A).withOpacity(0.6), fontSize: 13),
+      prefixIcon: Icon(icon, size: 18, color: const Color(0xFF78706A)),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2C3E50), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

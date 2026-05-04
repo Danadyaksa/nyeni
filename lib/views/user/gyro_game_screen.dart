@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/game_controller.dart';
 
@@ -88,19 +89,31 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
   final Map<int, List<String>> _mazes = {
     1: [
-      "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "W....W...W", "WWWW.W.W.W",
-      "W......W.W", "W.WWWWWW.W", "W.W......W", "W.W.WWWWWW", "W.W......W",
+      "WWWWWWWWWW", "WHWW.....W", "WS.WWWWW.W", "W....W...W", "WWWW.W.W.W",
+      "W..W...W.W", "W.WWWWWW.W", "W.W......W", "W.W.WWWWWW", "W.W......W",
       "W.WWWWWW.W", "W........W", "W.WWWWWWWW", "W.......FW", "WWWWWWWWWW",
     ],
     2: [
-      "WWWWWWWWWW", "WS.......W", "W.WWWWWW.W", "W.W.H..W.W", "W.W.WW.W.W",
-      "W.W....W.W", "W.WWWW.W.W", "W.H....W.W", "WWWWWWWW.W", "W........W",
-      "W.WWWWWW.W", "W.W...HW.W", "W.W.WWWW.W", "W......WFW", "WWWWWWWWWW",
+      "WWWWWWWWWW", "WHW......W", "WSW.WWWW.W", "W.W.H..W.W", "W.W.WW.W.W",
+      "W.W....W.W", "W.WWWW.W.W", "W......W.W", "WWWWWWWW.W", "W........W",
+      "W.WWWWWW.W", "W.W...FW.W", "W.W.WWWW.W", "W...H..WHW", "WWWWWWWWWW",
     ],
     3: [
-      "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "W.HW.W...W", "W..W.W.W.W",
-      "WW.W.W.WHW", "W..W.W...W", "W.WWWWWW.W", "W........W", "W.WWWWWW.W",
-      "WHW....W.W", "W.W.WW.W.W", "W.W.WH.W.W", "W........F", "WWWWWWWWWW",
+      "WWWWWWWWWW", 
+      "W.SW.....W", 
+      "W.HW.WWW.W", 
+      "W..W.W...W", 
+      "WH.W.W.WHW",
+      "WW.W.W.WHW", 
+      "W..W.W...W", 
+      "W.WW.WWW.W", 
+      "W....WWW.W", 
+      "WHWWWWWW.W",
+      "WFW...HW.W", 
+      "W.W.W..W.W", 
+      "W.W.WH.W.W", 
+      "W...H....W", 
+      "WWWWWWWWWW",
     ],
     4: [
       "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "WH...W...W", "W.WWWW.W.W",
@@ -320,14 +333,14 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
           children: [
             Icon(isWin ? LucideIcons.trophy : (isTimeout ? LucideIcons.timer : LucideIcons.skull), size: 80, color: isWin ? Colors.amber : Colors.red),
             const SizedBox(height: 24),
-            Text(isWin ? "LEVEL SELESAI!" : (isTimeout ? "WAKTU HABIS!" : "KAMU TERJATUH!"), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isWin ? Colors.amber[700] : Colors.red[800])),
+            Text(isWin ? "LEVEL SELESAI!" : (isTimeout ? "WAKTU HABIS!" : "KAMU TERJATUH!"), style: GoogleFonts.ebGaramond(fontSize: 24, fontWeight: FontWeight.bold, color: isWin ? Colors.amber[700] : Colors.red[800])),
             
             if (isWin && timeTaken != null) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                child: Text("Waktu kamu: $timeTaken Detik ⏱️", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber[900])),
+                child: Text("Waktu kamu: $timeTaken Detik ⏱️", style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: Colors.amber[900])),
               )
             ],
 
@@ -335,7 +348,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
             Text(isWin 
               ? "Luar biasa! Kamu mendapat +100 XP. Kalau kamu memecahkan rekor lamamu, datanya sudah masuk ke Leaderboard!" 
               : (isTimeout ? "Kamu terlalu lambat mencapai garis finish. Coba lagi lebih cepat!" : "Bola masuk ke lubang jebakan. Konsentrasi dan atur kemiringan HP-mu perlahan-lahan."), 
-              textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, height: 1.5)),
+              textAlign: TextAlign.center, style: GoogleFonts.manrope(color: const Color(0xFF78706A), height: 1.5)),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -344,8 +357,8 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
                   Navigator.pop(context);
                   setState(() => _selectedLevel = null);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C3E50), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: Text(isWin ? "Kembali ke Menu" : "Coba Lagi", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9A3412), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text(isWin ? "Kembali ke Menu" : "Coba Lagi", style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             )
           ],
@@ -359,10 +372,10 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text('Nyeni Labyrinth', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('Nyeni Labyrinth', style: GoogleFonts.libreBaskerville(fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
+        backgroundColor: const Color(0xFFFAFAF9),
         centerTitle: true,
         elevation: 0,
         leading: _selectedLevel != null ? IconButton(
@@ -404,7 +417,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: isLocked ? Colors.grey[300] : const Color(0xFF2C3E50),
+                  backgroundColor: isLocked ? Colors.grey[300] : const Color(0xFF9A3412),
                   child: Text("$level", style: TextStyle(color: isLocked ? Colors.grey[600] : Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                 ),
                 const SizedBox(width: 16),
@@ -412,13 +425,13 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Labirin Tantangan $level", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : Colors.black)),
+                      Text("Labirin Tantangan $level", style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 16, color: isLocked ? Colors.grey : const Color(0xFF3A302A))),
                       const SizedBox(height: 4),
-                      Text(isLocked ? "Terkunci" : "Batas Waktu: ${_timeLimits[level]} Detik", style: TextStyle(fontSize: 12, color: isLocked ? Colors.red : Colors.green)),
+                      Text(isLocked ? "Terkunci" : "Batas Waktu: ${_timeLimits[level]} Detik", style: GoogleFonts.manrope(fontSize: 12, color: isLocked ? Colors.red : Colors.green)),
                     ],
                   ),
                 ),
-                Icon(isLocked ? LucideIcons.lock : LucideIcons.playCircle, color: isLocked ? Colors.grey : const Color(0xFF2C3E50), size: 30),
+                Icon(isLocked ? LucideIcons.lock : LucideIcons.playCircle, color: isLocked ? Colors.grey : const Color(0xFF9A3412), size: 30),
               ],
             ),
           ),
@@ -438,21 +451,21 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Miringkan HP-mu!", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              Text("Miringkan HP-mu!", style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: const Color(0xFF78706A))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _timeLeft <= 5 ? Colors.red.withOpacity(0.1) : const Color(0xFF2C3E50).withOpacity(0.1),
+                  color: _timeLeft <= 5 ? Colors.red.withOpacity(0.1) : const Color(0xFF9A3412).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _timeLeft <= 5 ? Colors.red : const Color(0xFF2C3E50).withOpacity(0.3))
+                  border: Border.all(color: _timeLeft <= 5 ? Colors.red : const Color(0xFF9A3412).withOpacity(0.3))
                 ),
                 child: Row(
                   children: [
-                    Icon(LucideIcons.timer, size: 16, color: _timeLeft <= 5 ? Colors.red : const Color(0xFF2C3E50)),
+                    Icon(LucideIcons.timer, size: 16, color: _timeLeft <= 5 ? Colors.red : const Color(0xFF9A3412)),
                     const SizedBox(width: 6),
                     Text(
                       "00:${_timeLeft.toString().padLeft(2, '0')}", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _timeLeft <= 5 ? Colors.red : const Color(0xFF2C3E50))
+                      style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 16, color: _timeLeft <= 5 ? Colors.red : const Color(0xFF9A3412))
                     ),
                   ],
                 ),
@@ -467,7 +480,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
               height: boardHeight,
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF7ED), // Warna lantai labirin sedikit lebih hangat
-                border: Border.all(color: const Color(0xFF2C3E50), width: 4),
+                border: Border.all(color: const Color(0xFF9A3412), width: 4),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 10))],
               ),
@@ -485,7 +498,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
                             height: _cellSize,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2C3E50), 
+                                color: const Color(0xFF9A3412), 
                                 borderRadius: BorderRadius.circular(4), // Dinding agak melengkung
                                 border: Border.all(color: Colors.black26, width: 1.5),
                                 boxShadow: [
@@ -577,7 +590,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
                     if (_isProcessingResult)
                       Container(
                         color: Colors.white.withOpacity(0.8),
-                        child: const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50))),
+                        child: const Center(child: CircularProgressIndicator(color: Color(0xFF9A3412))),
                       )
                   ],
                 ),

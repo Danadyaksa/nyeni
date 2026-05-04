@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/admin_controller.dart';
 
 class AdminRevenueScreen extends StatefulWidget {
@@ -17,6 +18,14 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
 
   // Filter bulan yang dipilih (null = tampilkan semua / ringkasan)
   String? _selectedMonth; // format 'YYYY-MM'
+
+  // Sahara theme colors
+  static const _primary = Color(0xFF9A3412);
+  static const _background = Color(0xFFFAF5EE);
+  static const _appBarBg = Color(0xFFFAFAF9);
+  static const _textPrimary = Color(0xFF3A302A);
+  static const _textSecondary = Color(0xFF78706A);
+  static const _cardBorder = Color(0xFFD8D0C8);
 
   @override
   void initState() {
@@ -72,26 +81,31 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _background,
       appBar: AppBar(
-        title: const Text('Laporan Revenue',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF2C3E50),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('Laporan Revenue',
+            style: GoogleFonts.libreBaskerville(
+              fontWeight: FontWeight.w700,
+              color: _primary,
+              fontSize: 20,
+              letterSpacing: -0.5,
+            )),
+        backgroundColor: _appBarBg,
+        iconTheme: const IconThemeData(color: Color(0xFF78716C)),
         centerTitle: true,
         elevation: 0,
         actions: [
           IconButton(
-              icon: const Icon(LucideIcons.refreshCw, color: Colors.white),
+              icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF78716C)),
               onPressed: _loadData),
         ],
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF2C3E50)))
+              child: CircularProgressIndicator(color: _primary))
           : RefreshIndicator(
               onRefresh: _loadData,
-              color: const Color(0xFF2C3E50),
+              color: _primary,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
@@ -110,17 +124,17 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Pendapatan per Bulan',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text('Pendapatan per Bulan',
+                            style: GoogleFonts.ebGaramond(
+                                fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
                         if (_selectedMonth != null)
                           TextButton.icon(
                             onPressed: () =>
                                 setState(() => _selectedMonth = null),
                             icon: const Icon(LucideIcons.x,
                                 size: 14, color: Colors.grey),
-                            label: const Text('Reset',
-                                style: TextStyle(
+                            label: Text('Reset',
+                                style: GoogleFonts.manrope(
                                     color: Colors.grey, fontSize: 12)),
                           ),
                       ],
@@ -130,9 +144,9 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                     const SizedBox(height: 28),
 
                     // ── Revenue per event ──
-                    const Text('Revenue per Event',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('Revenue per Event',
+                        style: GoogleFonts.ebGaramond(
+                            fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
                     const SizedBox(height: 12),
                     _buildPerEventSection(),
                     const SizedBox(height: 28),
@@ -145,15 +159,15 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                             _selectedMonth != null
                                 ? 'Transaksi — ${_selectedMonthData?['month_label'] ?? _selectedMonth}'
                                 : 'Riwayat Transaksi Terbaru',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.ebGaramond(
+                                fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
                           ),
                         ),
                         if (_filteredTransactions.isNotEmpty)
                           Text(
                             '${_filteredTransactions.length} transaksi',
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
+                            style: GoogleFonts.manrope(
+                                color: _textSecondary, fontSize: 12),
                           ),
                       ],
                     ),
@@ -188,7 +202,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2C3E50), Color(0xFF3D5166)],
+          colors: [Color(0xFF9A3412), Color(0xFFB44318)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -205,13 +219,13 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
               isFiltered
                   ? 'Revenue ${monthData['month_label']}'
                   : 'Total Revenue (Biaya Layanan)',
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: GoogleFonts.manrope(color: Colors.white70, fontSize: 13),
             ),
           ]),
           const SizedBox(height: 8),
           Text(
             _fmtCurrency(revenue),
-            style: const TextStyle(
+            style: GoogleFonts.ebGaramond(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.bold),
@@ -219,13 +233,12 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
           const SizedBox(height: 4),
           Row(children: [
             Text('$sold tiket terjual',
-                style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                style: GoogleFonts.manrope(color: Colors.white60, fontSize: 12)),
             if (txCount != null) ...[
-              const Text(' · ',
-                  style: TextStyle(color: Colors.white60, fontSize: 12)),
+              Text(' · ',
+                  style: GoogleFonts.manrope(color: Colors.white60, fontSize: 12)),
               Text('$txCount transaksi',
-                  style:
-                      const TextStyle(color: Colors.white60, fontSize: 12)),
+                  style: GoogleFonts.manrope(color: Colors.white60, fontSize: 12)),
             ],
           ]),
         ],
@@ -257,6 +270,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _cardBorder, width: 1),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withOpacity(0.04), blurRadius: 6)
@@ -266,10 +280,10 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
         Icon(icon, color: color, size: 20),
         const SizedBox(height: 6),
         Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 18)),
+            style: GoogleFonts.ebGaramond(
+                fontWeight: FontWeight.bold, fontSize: 18, color: _textPrimary)),
         Text(label,
-            style: const TextStyle(color: Colors.grey, fontSize: 11)),
+            style: GoogleFonts.manrope(color: _textSecondary, fontSize: 11)),
       ]),
     );
   }
@@ -285,6 +299,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder, width: 1),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)
         ],
@@ -304,9 +319,9 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
               }),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.orange.withOpacity(0.05) : Colors.transparent,
+                  color: isSelected ? _primary.withOpacity(0.05) : Colors.transparent,
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade100),
+                    bottom: BorderSide(color: _cardBorder),
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -317,14 +332,14 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Colors.orange.withOpacity(0.15)
-                            : const Color(0xFF2C3E50).withOpacity(0.08),
+                            ? _primary.withOpacity(0.15)
+                            : _primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         LucideIcons.calendarDays,
                         size: 16,
-                        color: isSelected ? Colors.orange : const Color(0xFF2C3E50),
+                        color: isSelected ? _primary : _primary.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -334,24 +349,24 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                         children: [
                           Text(
                             m['month_label']?.toString() ?? '-',
-                            style: TextStyle(
+                            style: GoogleFonts.manrope(
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
-                              color: isSelected ? Colors.orange : Colors.black87,
+                              color: isSelected ? _primary : _textPrimary,
                             ),
                           ),
                           Text(
                             '$txCount transaksi · $ticketCount tiket',
-                            style: const TextStyle(color: Colors.grey, fontSize: 11),
+                            style: GoogleFonts.manrope(color: _textSecondary, fontSize: 11),
                           ),
                         ],
                       ),
                     ),
                     Text(
                       _fmtCurrency(rev),
-                      style: TextStyle(
+                      style: GoogleFonts.ebGaramond(
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.orange : const Color(0xFF2C3E50),
+                        color: isSelected ? _primary : _textPrimary,
                         fontSize: 14,
                       ),
                     ),
@@ -404,6 +419,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _cardBorder, width: 1),
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.04), blurRadius: 8)
@@ -416,37 +432,37 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                 children: [
                   Expanded(
                     child: Text(eventName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                        style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold, fontSize: 14, color: _textPrimary),
                         overflow: TextOverflow.ellipsis),
                   ),
                   Text(_fmtCurrency(revenue),
-                      style: const TextStyle(
+                      style: GoogleFonts.ebGaramond(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
+                          color: _primary,
                           fontSize: 14)),
                 ],
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(LucideIcons.creditCard,
-                      size: 12, color: Colors.grey),
+                  Icon(LucideIcons.creditCard,
+                      size: 12, color: _textSecondary),
                   const SizedBox(width: 4),
                   Text('$txCount pembayaran',
-                      style: const TextStyle(
-                          color: Colors.grey, fontSize: 11)),
+                      style: GoogleFonts.manrope(
+                          color: _textSecondary, fontSize: 11)),
                   const SizedBox(width: 12),
-                  const Icon(LucideIcons.ticket,
-                      size: 12, color: Colors.grey),
+                  Icon(LucideIcons.ticket,
+                      size: 12, color: _textSecondary),
                   const SizedBox(width: 4),
                   Text('$ticketCount tiket',
-                      style: const TextStyle(
-                          color: Colors.grey, fontSize: 11)),
+                      style: GoogleFonts.manrope(
+                          color: _textSecondary, fontSize: 11)),
                   const Spacer(),
                   Text('${(percent * 100).toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                          color: Colors.grey, fontSize: 11)),
+                      style: GoogleFonts.manrope(
+                          color: _textSecondary, fontSize: 11)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -456,8 +472,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
                   value: percent,
                   minHeight: 6,
                   backgroundColor: Colors.grey.shade100,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFF2C3E50)),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_primary),
                 ),
               ),
             ],
@@ -503,6 +518,7 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _cardBorder, width: 1),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withOpacity(0.03), blurRadius: 6)
@@ -525,31 +541,31 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(tx['event_name']?.toString() ?? '-',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13),
+                    style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w600, fontSize: 13, color: _textPrimary),
                     overflow: TextOverflow.ellipsis),
                 Text(tx['user_name']?.toString() ?? '-',
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 11)),
+                    style: GoogleFonts.manrope(
+                        color: _textSecondary, fontSize: 11)),
                 Row(
                   children: [
-                    const Icon(LucideIcons.ticket,
-                        size: 10, color: Colors.grey),
+                    Icon(LucideIcons.ticket,
+                        size: 10, color: _textSecondary),
                     const SizedBox(width: 3),
                     Text('$ticketCount tiket',
-                        style: const TextStyle(
-                            color: Colors.grey, fontSize: 10)),
+                        style: GoogleFonts.manrope(
+                            color: _textSecondary, fontSize: 10)),
                     if (ticketPrice > 0) ...[
                       const SizedBox(width: 6),
                       Text('@ ${_fmtCurrency(ticketPrice)}',
-                          style: const TextStyle(
-                              color: Colors.grey, fontSize: 10)),
+                          style: GoogleFonts.manrope(
+                              color: _textSecondary, fontSize: 10)),
                     ],
                     if (uniqueCode > 0) ...[
                       const SizedBox(width: 6),
                       Text(
                           '+${uniqueCode.toString().padLeft(3, '0')}',
-                          style: const TextStyle(
+                          style: GoogleFonts.manrope(
                               color: Colors.orange, fontSize: 10)),
                     ],
                   ],
@@ -562,21 +578,21 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
             children: [
               Text(
                 serviceFee > 0 ? _fmtCurrency(serviceFee) : 'Rp 2.500',
-                style: const TextStyle(
+                style: GoogleFonts.ebGaramond(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                    color: _primary,
                     fontSize: 13),
               ),
               Text('fee layanan',
-                  style: TextStyle(
-                      color: Colors.grey[500], fontSize: 9)),
+                  style: GoogleFonts.manrope(
+                      color: _textSecondary, fontSize: 9)),
               if (totalAmount > 0)
                 Text('Total: ${_fmtCurrency(totalAmount)}',
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 10)),
+                    style: GoogleFonts.manrope(
+                        color: _textSecondary, fontSize: 10)),
               Text(createdAt,
-                  style: const TextStyle(
-                      color: Colors.grey, fontSize: 10)),
+                  style: GoogleFonts.manrope(
+                      color: _textSecondary, fontSize: 10)),
             ],
           ),
         ],
@@ -591,11 +607,12 @@ class _AdminRevenueScreenState extends State<AdminRevenueScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _cardBorder, width: 1)),
       child: Center(
           child: Text(msg,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey))),
+              style: GoogleFonts.manrope(color: _textSecondary))),
     );
   }
 

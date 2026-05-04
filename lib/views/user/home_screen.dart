@@ -4,11 +4,13 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/event_controller.dart';
 import '../../services/notification_service.dart';
 import '../../config/api_config.dart';
 import 'event_detail_screen.dart';
 import 'notification_screen.dart';
+import 'all_events_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _filterActive = false;
 
   List<dynamic> _allEvents = [];
+  List<dynamic> _recommendedEvents = []; // Store shuffled recommendations once
   List<Map<String, dynamic>> _promoBanners = []; // {id, title, image_url}
   bool _isLoading = true;
 
@@ -115,6 +118,10 @@ class _HomeScreenState extends State<HomeScreen> {
           'early_bird_start': e.earlyBirdStart,
           'early_bird_end': e.earlyBirdEnd,
         }).toList();
+        
+        // Shuffle recommendations ONCE when data is loaded
+        _recommendedEvents = List.from(_allEvents)..shuffle(Random());
+        
         _promoBanners = withImage.take(5).cast<Map<String, dynamic>>().toList();
         // Fallback kalau belum ada event bergambar
         if (_promoBanners.isEmpty) {
@@ -176,9 +183,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'Rp ${_fmtPrice(displayPrice)}',
-              style: const TextStyle(
+              style: GoogleFonts.ebGaramond(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
+                  color: const Color(0xFF9A3412),
                   fontSize: 13),
             ),
             const SizedBox(width: 4),
@@ -258,11 +265,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: [
                   const Icon(LucideIcons.slidersHorizontal,
-                      size: 18, color: Color(0xFF2C3E50)),
+                      size: 18, color: Color(0xFF9A3412)),
                   const SizedBox(width: 8),
-                  const Text('Filter Event',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 17)),
+                  Text('Filter Event',
+                      style: GoogleFonts.ebGaramond(
+                          fontWeight: FontWeight.bold, fontSize: 17, color: const Color(0xFF3A302A))),
                   const Spacer(),
                   // Reset filter
                   TextButton(
@@ -280,11 +287,11 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
 
               // ── Filter Tipe Event ──
-              const Text('Tipe Event',
-                  style: TextStyle(
+              Text('Tipe Event',
+                  style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
-                      color: Color(0xFF2C3E50))),
+                      color: const Color(0xFF3A302A))),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -301,13 +308,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: selected
-                            ? const Color(0xFF2C3E50)
+                            ? const Color(0xFF9A3412)
                             : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         cat,
-                        style: TextStyle(
+                        style: GoogleFonts.manrope(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: selected ? Colors.white : Colors.grey.shade700,
@@ -323,18 +330,18 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Range Harga',
-                      style: TextStyle(
+                  Text('Range Harga',
+                      style: GoogleFonts.manrope(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Color(0xFF2C3E50))),
+                          color: const Color(0xFF3A302A))),
                   Text(
                     tempMin == 0 && tempMax == _absoluteMax
                         ? 'Semua harga'
                         : '${_fmtPriceShort(tempMin)} – ${_fmtPriceShort(tempMax)}',
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: const Color(0xFF78706A),
                         fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -342,11 +349,11 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               SliderTheme(
                 data: SliderTheme.of(ctx).copyWith(
-                  activeTrackColor: const Color(0xFF2C3E50),
+                  activeTrackColor: const Color(0xFF9A3412),
                   inactiveTrackColor: Colors.grey.shade200,
-                  thumbColor: const Color(0xFF2C3E50),
+                  thumbColor: const Color(0xFF9A3412),
                   overlayColor:
-                      const Color(0xFF2C3E50).withOpacity(0.1),
+                      const Color(0xFF9A3412).withOpacity(0.1),
                   rangeThumbShape: const RoundRangeSliderThumbShape(
                       enabledThumbRadius: 8),
                   trackHeight: 4,
@@ -394,13 +401,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.pop(ctx);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C3E50),
+                    backgroundColor: const Color(0xFF9A3412),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Terapkan Filter',
-                      style: TextStyle(
+                  child: Text('Terapkan Filter',
+                      style: GoogleFonts.manrope(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 15)),
@@ -454,8 +461,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _searchQuery.isNotEmpty ||
         _selectedCategory != 'Semua';
 
+    // For recommendations (when no filter active), show max 4 from pre-shuffled list
+    List<dynamic> displayedEvents = filteredEvents;
+    if (!hasActiveFilter) {
+      // Use pre-shuffled recommendations instead of shuffling every build
+      displayedEvents = _recommendedEvents.take(4).toList();
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -466,10 +480,10 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Halo, $_userName",
-                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              const Text("Mau Nyeni di mana hari ini?",
-                  style: TextStyle(
-                      color: Color(0xFF2C3E50),
+                  style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12)),
+              Text("Mau Nyeni di mana hari ini?",
+                  style: GoogleFonts.ebGaramond(
+                      color: const Color(0xFF3A302A),
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
             ],
@@ -479,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(LucideIcons.bell, color: Color(0xFF2C3E50)),
+                icon: const Icon(LucideIcons.bell, color: Color(0xFF9A3412)),
                 onPressed: () async {
                   await Navigator.push(
                     context,
@@ -561,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 42,
                     decoration: BoxDecoration(
                       color: _filterActive
-                          ? const Color(0xFF2C3E50)
+                          ? const Color(0xFF9A3412)
                           : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -597,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: _isLoading 
-      ? const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50)))
+      ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A3412)))
       : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,7 +716,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   height: 8,
                   width: _currentBannerIndex == index ? 24 : 8,
-                  decoration: BoxDecoration(color: _currentBannerIndex == index ? const Color(0xFF2C3E50) : Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: _currentBannerIndex == index ? const Color(0xFF9A3412) : Colors.grey.shade300, borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
@@ -710,9 +724,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 24),
 
             // 2. KATEGORI FILTER
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text("Kategori Acara", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text("Kategori Acara", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -731,12 +745,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF2C3E50) : Colors.white,
+                        color: isSelected ? const Color(0xFF9A3412) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: isSelected ? const Color(0xFF2C3E50) : Colors.grey.shade300),
+                        border: Border.all(color: isSelected ? const Color(0xFF9A3412) : Colors.grey.shade300),
                       ),
                       child: Center(
-                        child: Text(cat, style: TextStyle(color: isSelected ? Colors.white : Colors.grey.shade600, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
+                        child: Text(cat, style: GoogleFonts.manrope(color: isSelected ? Colors.white : Colors.grey.shade600, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
                       ),
                     ),
                   );
@@ -758,10 +772,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         : _selectedCategory == 'Semua'
                             ? "Rekomendasi Nyeni"
                             : "Kategori: $_selectedCategory",
-                    style: const TextStyle(
+                    style: GoogleFonts.ebGaramond(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50)),
+                        color: const Color(0xFF3A302A)),
                   ),
                   if (hasActiveFilter)
                     GestureDetector(
@@ -782,11 +796,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.bold)),
                     )
                   else
-                    const Text("Lihat Semua",
-                        style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AllEventsScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Lihat Semua",
+                        style: GoogleFonts.manrope(
+                          color: const Color(0xFF9A3412),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -822,9 +849,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.72, 
                 ),
-                itemCount: filteredEvents.length,
+                itemCount: displayedEvents.length,
                 itemBuilder: (context, index) {
-                  final event = filteredEvents[index];
+                  final event = displayedEvents[index];
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailScreen(eventId: event['id'])));
@@ -860,7 +887,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Text(event['category'], style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(event['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF2C3E50)), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                Text(event['title'], style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF3A302A)), maxLines: 2, overflow: TextOverflow.ellipsis),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
@@ -881,6 +908,171 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               
+            // 4. EVENT TERBARU SECTION
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                "Event Terbaru",
+                style: GoogleFonts.ebGaramond(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3A302A),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Horizontal scrollable list of latest events
+            SizedBox(
+              height: 240,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _allEvents.length > 5 ? 5 : _allEvents.length,
+                itemBuilder: (context, index) {
+                  // Sort by created_at if available, otherwise show first 5
+                  final latestEvents = List.from(_allEvents);
+                  // Reverse to show newest first (assuming newer events have higher IDs)
+                  latestEvents.sort((a, b) => (b['id'] ?? 0).compareTo(a['id'] ?? 0));
+                  
+                  if (index >= latestEvents.length) return const SizedBox();
+                  final event = latestEvents[index];
+                  
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EventDetailScreen(eventId: event['id']),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 160,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAFAF9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFD8D0C8)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                child: Image.network(
+                                  ApiConfig.normalizeImageUrl(event['image_url']),
+                                  width: double.infinity,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    height: 120,
+                                    color: const Color(0xFFEAE2DA),
+                                    child: const Center(
+                                      child: Icon(LucideIcons.imageOff, color: Color(0xFF78706A)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF9A3412),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'BARU',
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEAE2DA),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    event['category'],
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 9,
+                                      color: const Color(0xFF9A3412),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  event['title'],
+                                  style: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: const Color(0xFF3A302A),
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(LucideIcons.calendar, size: 9, color: Color(0xFF78706A)),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        event['event_date'],
+                                        style: GoogleFonts.manrope(
+                                          fontSize: 9,
+                                          color: const Color(0xFF78706A),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Rp ${_fmtPrice(event['price'])}',
+                                  style: GoogleFonts.ebGaramond(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF9A3412),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
             const SizedBox(height: 100), 
           ],
         ),

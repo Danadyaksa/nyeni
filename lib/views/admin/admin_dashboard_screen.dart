@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import 'admin_payment_screen.dart';
@@ -67,172 +68,172 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAF5EE),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Admin Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.libreBaskerville(
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF9A3412),
+            fontSize: 20,
+            letterSpacing: -0.5,
+          ),
         ),
-        backgroundColor: const Color(0xFF2C3E50),
+        backgroundColor: const Color(0xFFFAFAF9),
         centerTitle: true,
         elevation: 0,
+        shadowColor: const Color(0xFFE7E5E4).withOpacity(0.5),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Colors.white),
+            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF78716C), size: 20),
             onPressed: _loadStats,
           ),
           IconButton(
-            icon: const Icon(LucideIcons.logOut, color: Colors.white),
+            icon: const Icon(LucideIcons.logOut, color: Color(0xFF78716C), size: 20),
             onPressed: () => _showLogoutDialog(),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2C3E50)))
-          : RefreshIndicator(
-              onRefresh: _loadStats,
-              color: const Color(0xFF2C3E50),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header greeting
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2C3E50), Color(0xFF3D5166)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A3412)))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ringkasan',
+                    style: GoogleFonts.ebGaramond(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF3A302A),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Stats grid
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                    children: [
+                      _buildStatCard(
+                        icon: LucideIcons.clock,
+                        label: 'Verifikasi',
+                        value: '$_pendingCount',
+                        color: const Color(0xFF9A3412),
+                        urgent: _pendingCount > 0,
                       ),
-                      child: Row(
+                      _buildStatCard(
+                        icon: LucideIcons.ticket,
+                        label: 'Tiket Aktif',
+                        value: '$_activeCount',
+                        color: const Color(0xFF9A3412),
+                      ),
+                      _buildStatCard(
+                        icon: LucideIcons.calendarDays,
+                        label: 'Total Event',
+                        value: '$_totalEvents',
+                        color: const Color(0xFF9A3412),
+                      ),
+                      _buildStatCard(
+                        icon: LucideIcons.trendingUp,
+                        label: 'Revenue',
+                        value: _formatCurrency(_totalRevenue),
+                        color: const Color(0xFF9A3412),
+                        smallText: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 28),
+                  Text(
+                    'Menu Admin',
+                    style: GoogleFonts.ebGaramond(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF3A302A),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Menu items
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFD8D0C8).withOpacity(0.6),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3A302A).withOpacity(0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(LucideIcons.shieldCheck, color: Colors.white, size: 28),
+                          _buildMenuCard(
+                            icon: LucideIcons.clipboardCheck,
+                            title: 'Verifikasi Pembayaran',
+                            subtitle: '$_pendingCount tiket menunggu konfirmasi',
+                            color: const Color(0xFF9A3412),
+                            badge: _pendingCount > 0 ? '$_pendingCount' : null,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AdminPaymentScreen()),
+                            ).then((_) => _loadStats()),
+                            isFirst: true,
                           ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Selamat Datang, Admin!',
-                                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                                SizedBox(height: 4),
-                                Text('Kelola semua aktivitas Nyeni di sini.',
-                                    style: TextStyle(color: Colors.white70, fontSize: 13)),
-                              ],
+                          _buildMenuCard(
+                            icon: LucideIcons.calendarPlus,
+                            title: 'Kelola Event',
+                            subtitle: 'Tambah, edit, dan hapus pertunjukan & pameran',
+                            color: const Color(0xFF9A3412),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AdminEventsScreen()),
+                            ).then((_) => _loadStats()),
+                          ),
+                          _buildMenuCard(
+                            icon: LucideIcons.scanLine,
+                            title: 'Scan QR Tiket',
+                            subtitle: 'Scan QR code untuk validasi tiket masuk',
+                            color: const Color(0xFF9A3412),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AdminScannerScreen()),
+                            ),
+                          ),
+                          _buildMenuCard(
+                            icon: LucideIcons.barChart3,
+                            title: 'Laporan Revenue',
+                            subtitle: 'Lihat pendapatan dari setiap penjualan tiket',
+                            color: const Color(0xFF9A3412),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AdminRevenueScreen()),
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 24),
-                    const Text('Ringkasan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-
-                    // Stats grid
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.4,
-                      children: [
-                        _buildStatCard(
-                          icon: LucideIcons.clock,
-                          label: 'Menunggu Verifikasi',
-                          value: '$_pendingCount',
-                          color: Colors.orange,
-                          urgent: _pendingCount > 0,
-                        ),
-                        _buildStatCard(
-                          icon: LucideIcons.ticket,
-                          label: 'Tiket Aktif',
-                          value: '$_activeCount',
-                          color: Colors.green,
-                        ),
-                        _buildStatCard(
-                          icon: LucideIcons.calendarDays,
-                          label: 'Total Event',
-                          value: '$_totalEvents',
-                          color: const Color(0xFF2C3E50),
-                        ),
-                        _buildStatCard(
-                          icon: LucideIcons.trendingUp,
-                          label: 'Total Revenue',
-                          value: _formatCurrency(_totalRevenue),
-                          color: Colors.teal,
-                          smallText: true,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 28),
-                    const Text('Menu Admin', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-
-                    // Menu items
-                    _buildMenuCard(
-                      icon: LucideIcons.clipboardCheck,
-                      title: 'Verifikasi Pembayaran',
-                      subtitle: '$_pendingCount tiket menunggu konfirmasi',
-                      color: Colors.orange,
-                      badge: _pendingCount > 0 ? '$_pendingCount' : null,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AdminPaymentScreen()),
-                      ).then((_) => _loadStats()),
-                    ),
-
-                    _buildMenuCard(
-                      icon: LucideIcons.calendarPlus,
-                      title: 'Kelola Event',
-                      subtitle: 'Tambah, edit, dan hapus pertunjukan & pameran',
-                      color: const Color(0xFF2C3E50),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AdminEventsScreen()),
-                      ).then((_) => _loadStats()),
-                    ),
-
-                    _buildMenuCard(
-                      icon: LucideIcons.scanLine,
-                      title: 'Scan QR Tiket',
-                      subtitle: 'Scan QR code untuk validasi tiket masuk',
-                      color: Colors.purple,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AdminScannerScreen()),
-                      ),
-                    ),
-
-                    _buildMenuCard(
-                      icon: LucideIcons.barChart3,
-                      title: 'Laporan Revenue',
-                      subtitle: 'Lihat pendapatan dari setiap penjualan tiket',
-                      color: Colors.teal,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AdminRevenueScreen()),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
     );
@@ -247,13 +248,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     bool smallText = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: urgent ? Border.all(color: Colors.orange, width: 1.5) : null,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD8D0C8).withOpacity(0.6), width: 1),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: const Color(0xFF3A302A).withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -262,36 +267,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              if (urgent)
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
-                ),
-            ],
-          ),
-          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: smallText ? 14 : 22,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2C3E50),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    color: const Color(0xFF605850),
+                    letterSpacing: 0.2,
+                    fontWeight: FontWeight.w400,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              const SizedBox(width: 6),
+              Icon(icon, color: color, size: 16),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.ebGaramond(
+              fontSize: 28,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF3A302A),
+              height: 1.1,
+            ),
           ),
         ],
       ),
@@ -305,51 +309,49 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
     String? badge,
+    bool isFirst = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
+          border: isFirst ? null : Border(
+            top: BorderSide(
+              color: const Color(0xFFD8D0C8).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEAE2DA),
+                shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: const Color(0xFF605850), size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
+              child: Text(
+                title,
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF3A302A),
+                  height: 1.4,
+                ),
               ),
             ),
-            if (badge != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(badge, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-              )
-            else
-              const Icon(LucideIcons.chevronRight, color: Colors.grey),
+            const Icon(
+              LucideIcons.chevronRight,
+              color: Color(0xFF78716C),
+              size: 16,
+            ),
           ],
         ),
       ),
@@ -369,13 +371,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Keluar', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Yakin mau keluar dari panel admin?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          'Keluar',
+          style: GoogleFonts.ebGaramond(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: const Color(0xFF3A302A),
+          ),
+        ),
+        content: Text(
+          'Yakin mau keluar dari panel admin?',
+          style: GoogleFonts.manrope(
+            color: const Color(0xFF605850),
+            fontSize: 14,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.manrope(
+                color: const Color(0xFF78716C),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -383,10 +404,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _logout();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: const Color(0xFF9A3412),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text('Keluar', style: TextStyle(color: Colors.white)),
+            child: Text(
+              'Keluar',
+              style: GoogleFonts.manrope(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

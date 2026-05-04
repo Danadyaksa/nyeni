@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../config/api_config.dart';
 
 class TicketDetailScreen extends StatelessWidget {
@@ -18,10 +19,15 @@ class TicketDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2C3E50),
+      backgroundColor: const Color(0xFF9A3412),
       appBar: AppBar(
-        title: const Text("E-Tiket Nyeni",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          "E-Tiket Nyeni",
+          style: GoogleFonts.libreBaskerville(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -35,8 +41,9 @@ class TicketDetailScreen extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFFAFAF9),
                   borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFD8D0C8), width: 2),
                   boxShadow: [
                     BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -76,10 +83,11 @@ class TicketDetailScreen extends StatelessWidget {
                     Text(
                       eventName,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50)),
+                      style: GoogleFonts.ebGaramond(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF3A302A),
+                      ),
                     ),
                     const SizedBox(height: 8),
 
@@ -89,28 +97,39 @@ class TicketDetailScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20)),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(LucideIcons.checkCircle2,
+                          const Icon(LucideIcons.checkCircle2,
                               color: Colors.green, size: 16),
-                          SizedBox(width: 6),
-                          Text("Tiket Aktif",
-                              style: TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Tiket Aktif",
+                            style: GoogleFonts.manrope(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
 
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
                           vertical: 24.0, horizontal: 24.0),
-                      child: Divider(thickness: 2, color: Colors.black12),
+                      child: Divider(
+                        thickness: 2,
+                        color: const Color(0xFFD8D0C8),
+                      ),
                     ),
 
-                    const Text("Scan QR Code ini di pintu masuk",
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text(
+                      "Scan QR Code ini di pintu masuk",
+                      style: GoogleFonts.manrope(
+                        color: const Color(0xFF78706A),
+                        fontSize: 12,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // ── QR Code ──
@@ -122,9 +141,14 @@ class TicketDetailScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 16),
-                    Text("ID: $qrData",
-                        style: const TextStyle(fontSize: 9, color: Colors.grey),
-                        textAlign: TextAlign.center),
+                    Text(
+                      "ID: $qrData",
+                      style: GoogleFonts.manrope(
+                        fontSize: 9,
+                        color: const Color(0xFF78706A),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 32),
                   ],
                 ),
