@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../config/api_config.dart';
 
 class AuthService {
@@ -240,6 +242,16 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    
+    // Clear notifications from Hive
+    try {
+      if (Hive.isBoxOpen('notifications')) {
+        final box = Hive.box('notifications');
+        await box.clear();
+      }
+    } catch (e) {
+      debugPrint('Error clearing notifications on logout: $e');
+    }
   }
 
   Future<List<dynamic>> getMyTickets(String userId) async {

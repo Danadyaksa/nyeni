@@ -6,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:focus_detector/focus_detector.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/auth_controller.dart';
 import '../../config/api_config.dart';
@@ -14,6 +13,12 @@ import '../../controllers/biometric_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/ticket_controller.dart';
 import '../../services/notification_service.dart';
+import '../../utils/level_helper.dart';
+import '../widgets/dialogs/settings_dialog.dart';
+import '../widgets/dialogs/change_name_dialog.dart';
+import '../widgets/dialogs/change_email_dialog.dart';
+import '../widgets/dialogs/change_password_dialog.dart';
+import '../widgets/dialogs/enable_biometric_dialog.dart';
 import 'login_screen.dart';
 import 'ticket_detail_screen.dart';
 
@@ -176,561 +181,220 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
 
   void _showSettingsModal() async {
-    // Cek biometric availability
-    final biometricAvailable = await _biometricController.isBiometricAvailable();
-    final userId = _userData?['id']?.toString();
-    final biometricEnabled = userId != null ? await _biometricController.isBiometricEnabled(userId) : false;
-    
-    if (!mounted) return;
-    
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateModal) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Pengaturan Akun",
-                    style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(LucideIcons.user, color: Color(0xFF9A3412)),
-                  title: Text("Ganti Nama", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _editNameDialog();
-                  },
+    await SettingsDialog.show(
+      context,
+      userData: _userData,
+      onChangeName: _editNameDialog,
+      onChangeEmail: _editEmailDialog,
+      onChangePassword: _editPasswordDialog,
+      onBiometricToggle: (bool value) async {
+        final userId = _userData?['id']?.toString();
+        final email = _userData?['email']?.toString() ?? '';
+        
+        if (userId == null) return;
+        
+        if (value) {
+          // Enable biometric
+          _showEnableBiometricDialog(userId, email);
+        } else {
+          // Disable biometric
+          await _biometricController.clearBiometricCredentials(userId);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Login biometric dinonaktifkan',
+                  style: GoogleFonts.manrope(),
                 ),
-                ListTile(
-                  leading: const Icon(LucideIcons.mail, color: Color(0xFF9A3412)),
-                  title: Text("Ganti Email", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _editEmailDialog();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.lock, color: Color(0xFF9A3412)),
-                  title: Text("Ganti Password", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _editPasswordDialog();
-                  },
-                ),
-                
-                // ── Biometric Toggle (jika device support) ──
-                if (biometricAvailable && userId != null) ...[
-                  const Divider(),
-                  SwitchListTile(
-                    secondary: const Icon(LucideIcons.fingerprint, color: Color(0xFF9A3412)),
-                    title: Text("Login Biometric", style: GoogleFonts.manrope(color: const Color(0xFF3A302A))),
-                    subtitle: Text("Gunakan sidik jari atau face ID", style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A))),
-                    value: biometricEnabled,
-                    activeColor: const Color(0xFF9A3412),
-                    onChanged: (bool value) async {
-                      if (value) {
-                        // Enable biometric - simpan credentials
-                        final email = _userData?['email']?.toString() ?? '';
-                        
-                        if (mounted) {
-                          Navigator.pop(context);
-                          _showEnableBiometricDialog(userId, email);
-                        }
-                      } else {
-                        // Disable biometric - hapus credentials user ini saja
-                        await _biometricController.clearBiometricCredentials(userId);
-                        
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Login biometric dinonaktifkan', style: GoogleFonts.manrope()),
-                              backgroundColor: Colors.orange,
-                            ),
-                          );
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
-      ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      },
     );
   }
 
   // ─── DIALOG ENABLE BIOMETRIC ──────────────────────────────────────────────────
   
-  void _showEnableBiometricDialog(String userId, String email) {
-    final _formKey = GlobalKey<FormState>();
-    final passwordController = TextEditingController();
-    bool isObscure = true;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
-              children: [
-                const Icon(LucideIcons.fingerprint, color: Color(0xFF9A3412), size: 20),
-                const SizedBox(width: 8),
-                Text("Aktifkan Login Biometric", style: GoogleFonts.ebGaramond(fontSize: 16, fontWeight: FontWeight.w600)),
-              ],
+  void _showEnableBiometricDialog(String userId, String email) async {
+    final password = await EnableBiometricDialog.show(context);
+    
+    if (password == null) return;
+    
+    setState(() => _isLoading = true);
+    
+    // Verifikasi password TANPA update session
+    final verified = await _authController.verifyPassword(email, password);
+    
+    setState(() => _isLoading = false);
+    
+    if (verified) {
+      // Password benar, simpan credentials
+      await _biometricController.setBiometricEnabled(userId, true);
+      await _biometricController.saveBiometricCredentials(userId, email, password);
+      await _biometricController.setLastBiometricUserId(userId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Login biometric berhasil diaktifkan! 🎉',
+              style: GoogleFonts.manrope(),
             ),
-            content: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Masukkan password Anda untuk mengaktifkan login biometric',
-                    style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A)),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: isObscure,
-                    style: GoogleFonts.manrope(),
-                    decoration: InputDecoration(
-                      hintText: "Password",
-                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isObscure ? LucideIcons.eyeOff : LucideIcons.eye,
-                          color: Colors.grey,
-                          size: 18,
-                        ),
-                        onPressed: () => setStateDialog(() => isObscure = !isObscure),
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password wajib diisi';
-                      return null;
-                    },
-                  ),
-                ],
-              ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Password salah, gagal mengaktifkan biometric',
+              style: GoogleFonts.manrope(),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (!_formKey.currentState!.validate()) return;
-                  
-                  setState(() => _isLoading = true);
-                  Navigator.pop(context);
-                  
-                  // Verifikasi password TANPA update session
-                  final verified = await _authController.verifyPassword(email, passwordController.text.trim());
-                  
-                  setState(() => _isLoading = false);
-                  
-                  if (verified) {
-                    // Password benar, simpan credentials
-                    await _biometricController.setBiometricEnabled(userId, true);
-                    await _biometricController.saveBiometricCredentials(userId, email, passwordController.text.trim());
-                    await _biometricController.setLastBiometricUserId(userId);
-                    
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Login biometric berhasil diaktifkan! 🎉', style: GoogleFonts.manrope()),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } else {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Password salah, gagal mengaktifkan biometric', style: GoogleFonts.manrope()),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9A3412),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text("Aktifkan", style: GoogleFonts.manrope(color: Colors.white)),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // ─── DIALOG GANTI NAMA ────────────────────────────────────────────────────────
 
   Future<void> _editNameDialog() async {
-    TextEditingController nameController =
-        TextEditingController(text: _userData?['full_name'] ?? '');
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(LucideIcons.user, color: Color(0xFF9A3412), size: 20),
-            const SizedBox(width: 8),
-            Text("Edit Nama", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A302A))),
-          ],
-        ),
-        content: TextField(
-            controller: nameController,
-            style: GoogleFonts.manrope(),
-            decoration: InputDecoration(
-              hintText: "Masukkan nama baru",
-              hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
-              ),
-            )),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A)))),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty) return;
-              Navigator.pop(context);
-              setState(() => _isLoading = true);
-              try {
-                final success = await _profileController.updateName(
-                  _userData!['id'].toString(),
-                  nameController.text.trim(),
-                );
-                if (success) {
-                  await _fetchUserData();
-                }
-              } catch (e) {
-                debugPrint("Error Update Name: $e");
-              } finally {
-                if (mounted) setState(() => _isLoading = false);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9A3412),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: Text("Simpan",
-                style: GoogleFonts.manrope(color: Colors.white)),
-          ),
-        ],
-      ),
+    final newName = await ChangeNameDialog.show(
+      context,
+      currentName: _userData?['full_name'] ?? '',
     );
+    
+    if (newName == null) return;
+    
+    setState(() => _isLoading = true);
+    try {
+      final success = await _profileController.updateName(
+        _userData!['id'].toString(),
+        newName,
+      );
+      if (success) {
+        await _fetchUserData();
+      }
+    } catch (e) {
+      debugPrint("Error Update Name: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ─── DIALOG GANTI EMAIL ───────────────────────────────────────────────────────
 
   Future<void> _editEmailDialog() async {
-    final _formKey = GlobalKey<FormState>();
     final currentEmail = _userData?['email']?.toString() ?? '';
-    TextEditingController emailController = TextEditingController(text: currentEmail);
-    
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(LucideIcons.mail, color: Color(0xFF9A3412), size: 20),
-            const SizedBox(width: 8),
-            Text("Ganti Email", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600)),
-          ],
-        ),
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Email saat ini: $currentEmail',
-                style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF78706A), fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Masukkan email baru dengan format yang valid',
-                style: GoogleFonts.manrope(fontSize: 11, color: const Color(0xFF78706A)),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.manrope(),
-                decoration: InputDecoration(
-                  hintText: "contoh@gmail.com",
-                  hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-                  prefixIcon: const Icon(LucideIcons.mail, size: 18, color: Color(0xFF9A3412)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
-                  ),
-                ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return 'Email wajib diisi';
-                  }
-                  // Validasi format email
-                  if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(v.trim())) {
-                    return 'Format email tidak valid';
-                  }
-                  // Validasi email tidak boleh sama dengan email saat ini
-                  if (v.trim().toLowerCase() == currentEmail.toLowerCase()) {
-                    return 'Email baru tidak boleh sama dengan email lama';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!_formKey.currentState!.validate()) return;
-              
-              Navigator.pop(context);
-              setState(() => _isLoading = true);
-              
-              try {
-                final result = await _profileController.updateEmail(
-                  _userData!['id'].toString(),
-                  emailController.text.trim(),
-                );
-                
-                if (result['error'] == null) {
-                  await _fetchUserData();
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Email berhasil diubah!', style: GoogleFonts.manrope()),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result['error'] ?? 'Gagal mengubah email', style: GoogleFonts.manrope()),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              } catch (e) {
-                debugPrint("Error Update Email: $e");
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                if (mounted) setState(() => _isLoading = false);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9A3412),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text("Simpan", style: GoogleFonts.manrope(color: Colors.white)),
-          ),
-        ],
-      ),
+    final newEmail = await ChangeEmailDialog.show(
+      context,
+      currentEmail: currentEmail,
     );
+    
+    if (newEmail == null) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final result = await _profileController.updateEmail(
+        _userData!['id'].toString(),
+        newEmail,
+      );
+      
+      if (result['error'] == null) {
+        await _fetchUserData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Email berhasil diubah!', style: GoogleFonts.manrope()),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['error'] ?? 'Gagal mengubah email',
+                style: GoogleFonts.manrope(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error Update Email: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ─── DIALOG GANTI PASSWORD ────────────────────────────────────────────────────
 
   Future<void> _editPasswordDialog() async {
-    final _formKey = GlobalKey<FormState>();
-    TextEditingController passController = TextEditingController();
-    TextEditingController confirmPassController = TextEditingController();
-    bool isObscurePass = true;
-    bool isObscureConfirm = true;
-
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
-              children: [
-                const Icon(LucideIcons.lock, color: Color(0xFF9A3412), size: 20),
-                const SizedBox(width: 8),
-                Text("Ganti Password", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.w600)),
-              ],
+    final newPassword = await ChangePasswordDialog.show(context);
+    
+    if (newPassword == null) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final result = await _profileController.updatePassword(
+        _userData!['id'].toString(),
+        newPassword,
+      );
+      
+      if (result['error'] == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Password berhasil diubah!', style: GoogleFonts.manrope()),
+              backgroundColor: Colors.green,
             ),
-            content: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: passController,
-                    obscureText: isObscurePass,
-                    style: GoogleFonts.manrope(),
-                    decoration: InputDecoration(
-                      hintText: "Password Baru (min. 6 karakter)",
-                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isObscurePass ? LucideIcons.eyeOff : LucideIcons.eye,
-                          color: Colors.grey,
-                          size: 18,
-                        ),
-                        onPressed: () => setStateDialog(() => isObscurePass = !isObscurePass),
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password wajib diisi';
-                      if (v.length < 6) return 'Password minimal 6 karakter';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: confirmPassController,
-                    obscureText: isObscureConfirm,
-                    style: GoogleFonts.manrope(),
-                    decoration: InputDecoration(
-                      hintText: "Ulangi Password Baru",
-                      hintStyle: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-                      prefixIcon: const Icon(LucideIcons.lock, size: 18, color: Color(0xFF9A3412)),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isObscureConfirm ? LucideIcons.eyeOff : LucideIcons.eye,
-                          color: Colors.grey,
-                          size: 18,
-                        ),
-                        onPressed: () => setStateDialog(() => isObscureConfirm = !isObscureConfirm),
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9A3412), width: 2),
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Konfirmasi password wajib diisi';
-                      if (v != passController.text) return 'Password tidak cocok';
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Batal", style: GoogleFonts.manrope(color: const Color(0xFF78706A))),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (!_formKey.currentState!.validate()) return;
-                  
-                  Navigator.pop(context);
-                  setState(() => _isLoading = true);
-                  
-                  try {
-                    final result = await _profileController.updatePassword(
-                      _userData!['id'].toString(),
-                      passController.text.trim(),
-                    );
-                    
-                    if (result['error'] == null) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Password berhasil diubah!', style: GoogleFonts.manrope()),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    } else {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(result['error'] ?? 'Gagal mengubah password', style: GoogleFonts.manrope()),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  } catch (e) {
-                    debugPrint("Error Update Password: $e");
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  } finally {
-                    if (mounted) setState(() => _isLoading = false);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9A3412),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text("Simpan", style: GoogleFonts.manrope(color: Colors.white)),
-              ),
-            ],
           );
-        },
-      ),
-    );
-  }
-
-  // ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-  Color _getAvatarBorderColor(int level) {
-    if (level < 5) return Colors.brown.shade400;
-    if (level < 10) return Colors.blueGrey.shade300;
-    return Colors.amber.shade500;
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['error'] ?? 'Gagal mengubah password',
+                style: GoogleFonts.manrope(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error Update Password: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Koneksi server gagal', style: GoogleFonts.manrope()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ─── TICKET LIST ─────────────────────────────────────────────────────────────
@@ -741,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     if (filteredTickets.isEmpty) {
       return Center(
-          child: Text("Kaga ada tiket $statusFilter nih pak",
+          child: Text("Belum ada tiket $statusFilter",
               style: GoogleFonts.manrope(color: const Color(0xFF78706A))));
     }
 
@@ -933,16 +597,11 @@ class _ProfileScreenState extends State<ProfileScreen>
     int totalXp = _userData?['total_xp'] ?? 0;
     int currentLevel = _userData?['level'] ?? 1;
 
-    int xpTarget;
-    if (currentLevel >= 10) {
-      xpTarget = 2700;
-    } else {
-      List<int> thresholds = [100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700];
-      xpTarget = thresholds[currentLevel - 1];
-    }
-
-    double progress = (totalXp / xpTarget).clamp(0.0, 1.0);
-    Color borderColor = _getAvatarBorderColor(currentLevel);
+    // Use LevelHelper for XP calculations
+    int xpTarget = LevelHelper.getNextLevelXP(currentLevel);
+    double progress = LevelHelper.getProgress(totalXp, currentLevel);
+    Color borderColor = LevelHelper.getTierColor(currentLevel);
+    int xpRemaining = LevelHelper.getXPRemaining(totalXp, currentLevel);
 
     // Normalisasi URL avatar localhost → IP server
     String? avatarUrl = _userData?['avatar_url'];
@@ -1110,7 +769,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             Text(
                                 currentLevel >= 10
                                     ? "Level Maksimal!"
-                                    : "${xpTarget - totalXp} XP lagi buat naik level",
+                                    : "$xpRemaining XP lagi buat naik level",
                                 style: GoogleFonts.manrope(
                                     fontSize: 10, 
                                     color: const Color(0xFF78706A),

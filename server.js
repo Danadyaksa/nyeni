@@ -38,12 +38,11 @@ db.connect((err) => {
   });
 });
 
-// Helper: bangun URL publik untuk file yang diupload
-// Pakai SERVER_HOST dari .env, fallback ke localhost
+// Helper: bangun path relatif untuk file yang diupload
+// Simpan sebagai path relatif agar tidak terikat IP tertentu
+// Flutter akan menggabungkan dengan serverHost terkini dari ApiConfig
 function buildFileUrl(filename) {
-  const PORT = process.env.PORT || 3000;
-  const HOST = process.env.SERVER_HOST || 'localhost';
-  return `http://${HOST}:${PORT}/uploads/${filename}`;
+  return `/uploads/${filename}`;
 }
 
 // ==========================================
@@ -443,39 +442,6 @@ app.post('/api/tickets/scan', (req, res) => {
         event_info: { name: ticket.event_name, date: ticket.event_date },
       });
     });
-  });
-});
-
-// ==========================================
-// GAME: SIMPAN REKOR
-// ==========================================
-app.post('/api/game/save-score', (req, res) => {
-  const { user_id, username, game_name, level, best_time } = req.body;
-  const sqlCheck =
-    'SELECT * FROM game_scores WHERE user_id = ? AND game_name = ? AND level = ?';
-  db.query(sqlCheck, [user_id, game_name, level], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0) {
-      const sqlInsert =
-        'INSERT INTO game_scores (user_id, username, game_name, level, best_time) VALUES (?, ?, ?, ?, ?)';
-      db.query(sqlInsert, [user_id, username, game_name, level, best_time], (err2) => {
-        if (err2) return res.status(500).json({ error: err2.message });
-        res.json({ message: 'Rekor pertama disimpan!' });
-      });
-    } else {
-      if (best_time < results[0].best_time) {
-        db.query(
-          'UPDATE game_scores SET best_time = ? WHERE id = ?',
-          [best_time, results[0].id],
-          (err2) => {
-            if (err2) return res.status(500).json({ error: err2.message });
-            res.json({ message: 'Rekor lama terpecahkan!' });
-          }
-        );
-      } else {
-        res.json({ message: 'Waktu tidak memecahkan rekor.' });
-      }
-    }
   });
 });
 

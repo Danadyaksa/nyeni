@@ -1,34 +1,20 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/event_controller.dart';
 import '../../models/event_model.dart';
 import '../../config/api_config.dart';
+import '../../utils/date_helper.dart';
+import '../../utils/price_helper.dart';
+import '../../utils/timezone_helper.dart';
+import '../widgets/dialogs/currency_converter_dialog.dart';
+import '../widgets/dialogs/timezone_converter_dialog.dart';
 import 'checkout_screen.dart';
 
-// ─── Helper: format tanggal ISO → "12 Mei 2026" ──────────────────────────────
-const List<String> _bulan = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-  'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-];
-
-String _fmtDate(String? raw) {
-  if (raw == null || raw.isEmpty) return '-';
-  try {
-    final d = DateTime.parse(raw);
-    return '${d.day} ${_bulan[d.month]} ${d.year}';
-  } catch (_) {
-    return raw;
-  }
-}
-
-String _fmtPrice(dynamic price) {
-  final p = (price is int) ? price : (double.tryParse(price.toString()) ?? 0).toInt();
-  return p.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
-}
+// Top-level helper functions (use helpers for consistency)
+String _fmtDate(String? raw) => DateHelper.format(raw);
+String _fmtPrice(dynamic price) => PriceHelper.formatNumber(price);
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -62,6 +48,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           'category': event.category,
           'event_date': event.date,
           'location': event.location,
+          'latitude': event.latitude,
+          'longitude': event.longitude,
           'price': event.price,
           'image_url': event.imageUrl,
           'description': event.description,
@@ -76,6 +64,72 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         } : null;
         _isLoading = false;
       });
+    }
+  }
+
+  // ─── Buka Google Maps dengan koordinat latitude & longitude ─────────────────
+  Future<void> _openGoogleMaps() async {
+    final lat = _event!['latitude'];
+    final lng = _event!['longitude'];
+    final location = _event!['location'] ?? '';
+
+    // Cek apakah ada koordinat
+    if (lat == null || lng == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Koordinat lokasi tidak tersedia', style: GoogleFonts.manrope()),
+            backgroundColor: const Color(0xFF9A3412),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Parse ke double
+    final latitude = (lat is double) ? lat : double.tryParse(lat.toString());
+    final longitude = (lng is double) ? lng : double.tryParse(lng.toString());
+
+    if (latitude == null || longitude == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Koordinat tidak valid', style: GoogleFonts.manrope()),
+            backgroundColor: const Color(0xFF9A3412),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Buka dengan geo: scheme menggunakan koordinat + label lokasi
+    final label = Uri.encodeComponent(location);
+    final geoUri = Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude($label)');
+    
+    try {
+      // Coba geo: scheme dulu (langsung buka app Maps dengan pin di koordinat)
+      if (await canLaunchUrl(geoUri)) {
+        await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+    } catch (e) {
+      print('Geo scheme failed: $e');
+    }
+
+    // Fallback: buka Google Maps web dengan koordinat
+    final googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+    
+    try {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuka Maps. Pastikan Google Maps terinstall.', style: GoogleFonts.manrope()),
+            backgroundColor: const Color(0xFF9A3412),
+          ),
+        );
+      }
     }
   }
 
@@ -280,14 +334,37 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                     ),
                   ]),
+                  const SizedBox(height: 12),
+
+                  // Button Lihat di Maps
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openGoogleMaps(),
+                      icon: const Icon(LucideIcons.navigation, size: 16),
+                      label: Text(
+                        'Lihat di Maps',
+                        style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF9A3412),
+                        side: const BorderSide(color: Color(0xFF9A3412)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
 
                   // Jam buka & tutup (tap untuk lihat konversi timezone)
                   if (_event!['open_time'] != null || _event!['close_time'] != null)
                     GestureDetector(
-                      onTap: () => _showTimezoneDialog(
-                        _event!['open_time']?.toString(),
-                        _event!['close_time']?.toString(),
+                      onTap: () => TimezoneConverterDialog.show(
+                        context,
+                        openTime: _event!['open_time']?.toString(),
+                        closeTime: _event!['close_time']?.toString(),
                       ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -429,7 +506,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     GestureDetector(
-                                      onTap: () => _showCurrencyDialog(ticket['price'] as int),
+                                      onTap: () => CurrencyConverterDialog.show(
+                                        context,
+                                        initialAmount: ticket['price'] as int,
+                                      ),
                                       child: Row(
                                         children: [
                                           Text(
@@ -670,300 +750,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return '';
   }
 
-  // ─── Jam buka/tutup helpers ───────────────────────────────────────────────
+  // ─── Jam buka/tutup helpers (using TimezoneHelper) ────────────────────────
 
   String _buildTimeDisplay(String? open, String? close) {
-    final o = _fmtTime(open);
-    final c = _fmtTime(close);
-    if (o != null && c != null) return '$o – $c WIB';
-    if (o != null) return 'Buka $o WIB';
-    if (c != null) return 'Tutup $c WIB';
-    return '-';
-  }
-
-  /// Format "HH:MM:SS" → "HH:MM"
-  String? _fmtTime(String? raw) {
-    if (raw == null || raw.isEmpty) return null;
-    final parts = raw.split(':');
-    if (parts.length >= 2) {
-      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
-    }
-    return raw;
-  }
-
-  /// Parse jam dari string "HH:MM:SS" ke menit sejak tengah malam
-  int? _timeToMinutes(String? raw) {
-    if (raw == null) return null;
-    final parts = raw.split(':');
-    if (parts.length >= 2) {
-      final h = int.tryParse(parts[0]) ?? 0;
-      final m = int.tryParse(parts[1]) ?? 0;
-      return h * 60 + m;
-    }
-    return null;
-  }
-
-  /// Konversi menit WIB ke timezone lain
-  String _convertTime(int wibMinutes, int offsetFromWib) {
-    int total = wibMinutes + offsetFromWib;
-    // Handle overflow
-    total = total % (24 * 60);
-    if (total < 0) total += 24 * 60;
-    final h = total ~/ 60;
-    final m = total % 60;
-    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-  }
-
-  // ─── Dialog konversi timezone ─────────────────────────────────────────────
-
-  void _showTimezoneDialog(String? openTime, String? closeTime) {
-    final openMin = _timeToMinutes(openTime);
-    final closeMin = _timeToMinutes(closeTime);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFFFAFAF9),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          const Icon(LucideIcons.globe, color: Color(0xFF9A3412)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _event!['title'] ?? 'Jam Event',
-              style: GoogleFonts.ebGaramond(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF3A302A),
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Jam operasional dalam berbagai zona waktu:',
-              style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            // WIB (base)
-            _tzRow('WIB', 'Waktu Indonesia Barat', openMin, closeMin, 0),
-            const Divider(height: 16),
-            _tzRow('WITA', 'Waktu Indonesia Tengah', openMin, closeMin, 60),
-            const Divider(height: 16),
-            _tzRow('WIT', 'Waktu Indonesia Timur', openMin, closeMin, 120),
-            const Divider(height: 16),
-            _tzRow('GMT', 'Greenwich Mean Time', openMin, closeMin, -420),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Tutup', style: GoogleFonts.manrope(color: const Color(0xFF9A3412))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tzRow(String zone, String label, int? openMin, int? closeMin, int offsetFromWib) {
-    String timeStr;
-    if (openMin != null && closeMin != null) {
-      timeStr = '${_convertTime(openMin, offsetFromWib)} – ${_convertTime(closeMin, offsetFromWib)}';
-    } else if (openMin != null) {
-      timeStr = 'Buka ${_convertTime(openMin, offsetFromWib)}';
-    } else if (closeMin != null) {
-      timeStr = 'Tutup ${_convertTime(closeMin, offsetFromWib)}';
-    } else {
-      timeStr = '-';
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(
-            zone,
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: const Color(0xFF3A302A),
-            ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.manrope(fontSize: 10, color: const Color(0xFF78706A)),
-          ),
-        ]),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF9A3412),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            timeStr,
-            style: GoogleFonts.manrope(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─── Dialog konversi harga ke mata uang lain ──────────────────────────────
-
-  void _showCurrencyDialog(int priceIdr) {
-    String toCurrency = 'USD';
-    String resultText = 'Tap Konversi';
-    bool isLoading = false;
-
-    final currencies = ['USD', 'EUR', 'GBP', 'JPY', 'SGD', 'MYR', 'AUD'];
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setStateDialog) => AlertDialog(
-          backgroundColor: const Color(0xFFFAFAF9),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(children: [
-            const Icon(LucideIcons.refreshCcw, color: Colors.green),
-            const SizedBox(width: 8),
-            Text(
-              'Konversi Harga Tiket',
-              style: GoogleFonts.ebGaramond(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF3A302A),
-              ),
-            ),
-          ]),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Harga IDR
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAE2DA),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Harga dalam IDR',
-                      style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 11),
-                    ),
-                    Text(
-                      'Rp ${_fmtPrice(priceIdr)}',
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: const Color(0xFF9A3412),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Pilih mata uang tujuan
-              Row(
-                children: [
-                  Text(
-                    'Konversi ke:',
-                    style: GoogleFonts.manrope(color: const Color(0xFF78706A), fontSize: 13),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: toCurrency,
-                      style: GoogleFonts.manrope(color: const Color(0xFF3A302A)),
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFD8D0C8)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: currencies
-                          .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c, style: GoogleFonts.manrope()),
-                              ))
-                          .toList(),
-                      onChanged: (v) => setStateDialog(() => toCurrency = v!),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Hasil konversi
-              isLoading
-                  ? const CircularProgressIndicator(color: Color(0xFF9A3412))
-                  : Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.green.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        resultText,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'Tutup',
-                style: GoogleFonts.manrope(color: const Color(0xFF78706A)),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9A3412),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () async {
-                setStateDialog(() => isLoading = true);
-                try {
-                  final res = await http.get(Uri.parse(
-                      'https://api.frankfurter.app/latest?amount=$priceIdr&from=IDR&to=$toCurrency'));
-                  if (res.statusCode == 200) {
-                    final data = jsonDecode(res.body);
-                    final rate = data['rates'][toCurrency];
-                    setStateDialog(() => resultText = '$rate $toCurrency');
-                  } else {
-                    setStateDialog(() => resultText = 'Gagal memuat kurs');
-                  }
-                } catch (e) {
-                  setStateDialog(() => resultText = 'Error jaringan');
-                } finally {
-                  setStateDialog(() => isLoading = false);
-                }
-              },
-              child: Text(
-                'Konversi',
-                style: GoogleFonts.manrope(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return TimezoneHelper.buildTimeDisplay(open, close);
   }
 }

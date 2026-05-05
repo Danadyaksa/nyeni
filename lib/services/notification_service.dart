@@ -195,7 +195,36 @@ class NotificationService {
     await _saveToHive(notif);
   }
 
-  // ─── NOTIFIKASI REMINDER TIKET AKTIF (H-7 sampai H-1) ───────────────────
+  // ─── NOTIFIKASI PEMBAYARAN DITOLAK ────────────────────────────────────────
+
+  Future<void> notifyPaymentDeclined({
+    required String eventName,
+    required int ticketCount,
+  }) async {
+    final title = '❌ Pembayaran Ditolak';
+    final body = ticketCount > 1
+        ? 'Maaf, pembayaran untuk $ticketCount tiket "$eventName" ditolak oleh admin. Silakan hubungi admin untuk info lebih lanjut.'
+        : 'Maaf, pembayaran untuk tiket "$eventName" ditolak oleh admin. Silakan hubungi admin untuk info lebih lanjut.';
+
+    final notif = AppNotification(
+      id: 'payment_declined_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      body: body,
+      createdAt: DateTime.now(),
+      type: 'payment',
+    );
+
+    await _showNotification(
+      id: 1002,
+      title: title,
+      body: body,
+      channelId: 'nyeni_payment',
+      channelName: 'Pembayaran Tiket',
+    );
+    await _saveToHive(notif);
+  }
+
+  // ─── NOTIFIKASI REMINDER TIKET AKTIF (H-7 sampai H-1 sebelum event MULAI) ───
 
   Future<void> checkAndSendTicketReminders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -216,15 +245,15 @@ class NotificationService {
         final eventName = ticket['event_name']?.toString() ?? '';
         final eventDateStr = ticket['event_date']?.toString() ?? '';
 
-        // Coba parse tanggal event
-        DateTime? eventDate = _parseEventDate(eventDateStr);
-        if (eventDate == null) continue;
+        // Parse tanggal event (bisa single date atau range)
+        DateTime? eventStartDate = _parseEventStartDate(eventDateStr);
+        if (eventStartDate == null) continue;
 
-        final daysLeft = eventDate.difference(now).inDays;
+        final daysUntilStart = eventStartDate.difference(now).inDays;
 
-        // Kirim reminder H-7 sampai H-1
-        if (daysLeft >= 1 && daysLeft <= 7) {
-          final notifId = 'reminder_${ticket['id']}_$daysLeft';
+        // Kirim reminder H-7 sampai H-1 sebelum event MULAI
+        if (daysUntilStart >= 1 && daysUntilStart <= 7) {
+          final notifId = 'reminder_${ticket['id']}_$daysUntilStart';
 
           // Cek apakah notif ini sudah pernah dikirim hari ini
           final sentKey = 'sent_$notifId';
@@ -233,9 +262,9 @@ class NotificationService {
           if (lastSent == todayStr) continue;
 
           final title = '🎭 Jangan Lupa Hadir!';
-          final body = daysLeft == 1
-              ? 'Besok adalah hari terakhir "$eventName"! Jangan sampai kelewatan ya!'
-              : 'Jangan lupa hadir ke "$eventName" ya! Acara akan berakhir $daysLeft hari lagi.';
+          final body = daysUntilStart == 1
+              ? 'Besok "$eventName" akan dimulai! Jangan sampai kelewatan ya!'
+              : '"$eventName" akan dimulai $daysUntilStart hari lagi. Siap-siap ya!';
 
           final notif = AppNotification(
             id: notifId,
@@ -246,7 +275,7 @@ class NotificationService {
           );
 
           await _showNotification(
-            id: 2000 + daysLeft,
+            id: 2000 + daysUntilStart,
             title: title,
             body: body,
             channelId: 'nyeni_reminder',
@@ -261,51 +290,15 @@ class NotificationService {
     }
   }
 
-  // ─── NOTIFIKASI PROMO HARIAN (jam 9 pagi) ────────────────────────────────
-
-  Future<void> checkAndSendDailyPromo() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    final todayStr = '${now.year}-${now.month}-${now.day}';
-    final lastPromo = prefs.getString('last_daily_promo');
-
-    // Hanya kirim 1x per hari, dan hanya antara jam 9-10 pagi
-    if (lastPromo == todayStr) return;
-    if (now.hour < 9 || now.hour >= 10) return;
-
-    const title = '🎨 Ada yang Seru Nih!';
-    const body =
-        'Lagi banyak pameran & pertunjukan seni di sekitarmu! Yakin nggak mau beli tiket? 🎭';
-
-    final notif = AppNotification(
-      id: 'promo_$todayStr',
-      title: title,
-      body: body,
-      createdAt: DateTime.now(),
-      type: 'promo',
-    );
-
-    await _showNotification(
-      id: 3001,
-      title: title,
-      body: body,
-      channelId: 'nyeni_promo',
-      channelName: 'Promo & Info',
-    );
-    await _saveToHive(notif);
-    await prefs.setString('last_daily_promo', todayStr);
-  }
-
   // ─── CEK SEMUA NOTIFIKASI (dipanggil saat app dibuka / foreground) ────────
 
   Future<void> runDailyChecks() async {
-    await checkAndSendDailyPromo();
     await checkAndSendTicketReminders();
   }
 
-  // ─── HELPER: parse tanggal event dari berbagai format ────────────────────
+  // ─── HELPER: parse tanggal MULAI event dari berbagai format ──────────────
 
-  DateTime? _parseEventDate(String raw) {
+  DateTime? _parseEventStartDate(String raw) {
     // Format ISO: "2026-06-22"
     try {
       return DateTime.parse(raw);
@@ -326,10 +319,19 @@ class NotificationService {
       }
     }
 
-    // Format range "25 Mei - 25 Juli 2026" → ambil tanggal akhir
+    // Format range "25 Mei - 25 Juli 2026" → ambil tanggal AWAL (bukan akhir)
     if (raw.contains('-')) {
-      final endPart = raw.split('-').last.trim();
-      return _parseEventDate(endPart);
+      final startPart = raw.split('-').first.trim();
+      // Kalau start part tidak punya tahun, ambil dari end part
+      if (!startPart.contains('2')) {
+        final endPart = raw.split('-').last.trim();
+        final yearMatch = RegExp(r'20\d{2}').firstMatch(endPart);
+        if (yearMatch != null) {
+          final year = yearMatch.group(0);
+          return _parseEventStartDate('$startPart $year');
+        }
+      }
+      return _parseEventStartDate(startPart);
     }
 
     return null;

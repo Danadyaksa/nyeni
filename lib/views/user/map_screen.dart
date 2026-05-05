@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/event_controller.dart';
+import '../../utils/price_helper.dart';
 import 'event_detail_screen.dart';
 
 class MapScreen extends StatefulWidget {
@@ -159,14 +160,6 @@ class _MapScreenState extends State<MapScreen> {
     return '${km.toStringAsFixed(1)} km';
   }
 
-  // ─── Format harga ─────────────────────────────────────────────────────────
-
-  String _fmtPrice(dynamic price) {
-    final p = (price is int) ? price : int.tryParse(price.toString()) ?? 0;
-    if (p == 0) return 'Gratis';
-    return 'Rp ${p.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-  }
-
   // ─── Tentukan harga yang ditampilkan (early bird atau reguler) ───────────
 
   Map<String, dynamic> _getEventPrice(Map<String, dynamic> event) {
@@ -189,16 +182,8 @@ class _MapScreenState extends State<MapScreen> {
         final startOk = ebStart == null || now.isAfter(DateTime.parse(ebStart.toString()));
         final endOk = ebEnd == null || now.isBefore(DateTime.parse(ebEnd.toString()));
         isEarlyBirdActive = startOk && endOk;
-        
-        // Debug logging
-        print('Event: ${event['title']}');
-        print('  EB Price: $ebPriceInt, Regular: $regularPrice');
-        print('  EB Start: $ebStart, EB End: $ebEnd');
-        print('  Now: $now');
-        print('  Start OK: $startOk, End OK: $endOk');
-        print('  Is Active: $isEarlyBirdActive');
       } catch (e) {
-        print('Error parsing dates for ${event['title']}: $e');
+        // Error parsing dates, skip early bird
       }
     }
 
@@ -957,7 +942,7 @@ class _MapScreenState extends State<MapScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _fmtPrice(displayPrice),
+              PriceHelper.formatNumber(displayPrice),
               style: GoogleFonts.manrope(
                   fontSize: 10,
                   color: const Color(0xFF3A302A),

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/event_controller.dart';
 import '../../config/api_config.dart';
+import '../../utils/price_helper.dart';
 import 'event_detail_screen.dart';
 
 class AllEventsScreen extends StatefulWidget {
@@ -82,7 +83,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
         Row(
           children: [
             Text(
-              'Rp ${_fmtPrice(displayPrice)}',
+              PriceHelper.formatNumber(displayPrice),
               style: GoogleFonts.ebGaramond(
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF9A3412),
@@ -109,7 +110,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
         ),
         if (isEarlyBirdActive)
           Text(
-            'Rp ${_fmtPrice(regularPrice)}',
+            PriceHelper.formatNumber(regularPrice),
             style: const TextStyle(
               fontSize: 10,
               color: Colors.grey,
@@ -118,12 +119,6 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
           ),
       ],
     );
-  }
-
-  String _fmtPrice(dynamic price) {
-    final p = (price is int) ? price : (double.tryParse(price.toString()) ?? 0).toInt();
-    return p.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
   }
 
   @override

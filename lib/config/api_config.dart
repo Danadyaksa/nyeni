@@ -44,7 +44,6 @@ class ApiConfig {
   
   /// Game endpoints
   static String get updateGameProgressUrl => "$baseUrl/game/progress";
-  static String get gameScoresUrl => "$baseUrl/game/scores";
   
   /// Feedback endpoints
   static String get feedbacksUrl => "$baseUrl/feedbacks";
@@ -66,13 +65,24 @@ class ApiConfig {
   
   /// Normalize image URL to use current server host
   /// 
-  /// Replaces localhost URLs with actual server IP
+  /// Handles 3 cases:
+  /// 1. Relative path (/uploads/...) → prepend current serverHost
+  /// 2. localhost URL → replace with current serverHost
+  /// 3. Any http://IP:PORT URL → replace host with current serverHost
   static String normalizeImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
     
-    return url
-        .replaceAll('http://localhost:3000', serverHost)
-        .replaceAll('http://10.0.2.2:3000', serverHost);
+    // Case 1: path relatif seperti /uploads/filename.jpg
+    if (url.startsWith('/')) {
+      return '$serverHost$url';
+    }
+    
+    // Case 2 & 3: URL absolut — replace host lama dengan host terkini
+    // Cocokkan pola http://IP_ATAU_HOSTNAME:PORT atau http://localhost:PORT
+    return url.replaceFirstMapped(
+      RegExp(r'http://[^/]+'),
+      (_) => serverHost,
+    );
   }
   
   /// Check if URL is valid

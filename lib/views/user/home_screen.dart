@@ -5,9 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../controllers/event_controller.dart';
+import '../../controllers/ticket_controller.dart';
 import '../../services/notification_service.dart';
 import '../../config/api_config.dart';
+import '../../utils/price_helper.dart';
+import '../widgets/user/event_card.dart';
+import '../widgets/user/recommendation_card.dart';
 import 'event_detail_screen.dart';
 import 'notification_screen.dart';
 import 'all_events_screen.dart';
@@ -26,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _unreadNotifCount = 0;
   final _notifService = NotificationService();
   final _eventController = EventController();
+  final _ticketController = TicketController();
 
   // Search & filter state
   final TextEditingController _searchCtrl = TextEditingController();
@@ -52,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshNotifCount();
     // Jalankan daily checks saat home dibuka
     NotificationService().runDailyChecks();
+    // Check payment notifications saat home dibuka
+    _checkPaymentNotifications();
 
     _pageController = PageController();
     _timer = Timer.periodic(const Duration(seconds: 3), (Timer timer) {
@@ -77,19 +85,148 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadUserData() async {
-      final prefs = await SharedPreferences.getInstance();
-      final userDataString = prefs.getString('user_data');
-      if (userDataString != null) {
-        final userData = jsonDecode(userDataString);
-        if (mounted) {
-          setState(() {
-            _userName = userData['full_name'] ?? "User"; // Tarik namanya pak!
-          });
-        }
+    final prefs = await SharedPreferences.getInstance();
+    final userDataString = prefs.getString('user_data');
+    if (userDataString != null) {
+      final userData = jsonDecode(userDataString);
+      if (mounted) {
+        setState(() {
+          _userName = userData['full_name'] ?? "User";
+        });
       }
     }
+  }
+
+  /// Check payment notifications saat home screen dibuka
+  /// Check untuk ACTIVE (accepted) dan DECLINED (rejected)
+  Future<void> _checkPaymentNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      if (userDataString == null) return;
+
+      final userData = jsonDecode(userDataString);
+      final userId = userData['id']?.toString();
+      if (userId == null) return;
+
+      // Ambil tiket user
+      final tickets = await _ticketController.getMyTickets(userId);
+      final freshTickets = tickets.map((t) => {
+        'id': t.id,
+        'status': t.status,
+        'transaction_id': t.transactionId,
+        'event_name': t.eventName,
+      }).toList();
+
+      // Gunakan Hive box 'nyeni_box' untuk menyimpan flag notifikasi
+      final box = Hive.box('nyeni_box');
+
+      // ─── CHECK ACCEPTED TICKETS ───────────────────────────────────────────
+      
+      final List<String> nowActive = freshTickets
+          .where((t) => t['status'] == 'ACTIVE')
+          .map((t) => t['id'].toString())
+          .toList();
+
+      // Daftar tiket aktif yang sudah pernah dinotifikasi
+      final List<dynamic> rawKnown = box.get('known_active_tickets', defaultValue: []);
+      final List<String> knownActive = rawKnown.map((e) => e.toString()).toList();
+
+      // Tiket yang baru aktif = ada di nowActive tapi belum di knownActive
+      final newlyActivated = nowActive
+          .where((id) => !knownActive.contains(id))
+          .toList();
+
+      for (final ticketId in newlyActivated) {
+        final ticket = freshTickets.firstWhere(
+          (t) => t['id'].toString() == ticketId,
+          orElse: () => {},
+        );
+        if (ticket.isEmpty) continue;
+
+        // Hitung berapa tiket dalam transaksi yang sama
+        final txId = ticket['transaction_id']?.toString();
+        int count = 1;
+        if (txId != null && txId.isNotEmpty) {
+          count = freshTickets
+              .where((t) =>
+                  t['transaction_id']?.toString() == txId &&
+                  t['status'] == 'ACTIVE')
+              .length;
+        }
+
+        // Kirim notifikasi hanya 1x per transaksi
+        final notifKey = 'notif_accepted_${txId ?? ticketId}';
+        final alreadySent = box.get(notifKey, defaultValue: false) as bool;
+        if (!alreadySent) {
+          await NotificationService().notifyPaymentAccepted(
+            eventName: ticket['event_name']?.toString() ?? 'Event',
+            ticketCount: count,
+          );
+          await box.put(notifKey, true);
+          _refreshNotifCount();
+        }
+      }
+
+      // Update daftar tiket aktif yang sudah diketahui
+      await box.put('known_active_tickets', nowActive);
+
+      // ─── CHECK DECLINED TICKETS ───────────────────────────────────────────
+      
+      final List<String> nowDeclined = freshTickets
+          .where((t) => t['status'] == 'DECLINED')
+          .map((t) => t['id'].toString())
+          .toList();
+
+      // Daftar tiket declined yang sudah pernah dinotifikasi
+      final List<dynamic> rawKnownDeclined = box.get('known_declined_tickets', defaultValue: []);
+      final List<String> knownDeclined = rawKnownDeclined.map((e) => e.toString()).toList();
+
+      // Tiket yang baru declined = ada di nowDeclined tapi belum di knownDeclined
+      final newlyDeclined = nowDeclined
+          .where((id) => !knownDeclined.contains(id))
+          .toList();
+
+      for (final ticketId in newlyDeclined) {
+        final ticket = freshTickets.firstWhere(
+          (t) => t['id'].toString() == ticketId,
+          orElse: () => {},
+        );
+        if (ticket.isEmpty) continue;
+
+        // Hitung berapa tiket dalam transaksi yang sama
+        final txId = ticket['transaction_id']?.toString();
+        int count = 1;
+        if (txId != null && txId.isNotEmpty) {
+          count = freshTickets
+              .where((t) =>
+                  t['transaction_id']?.toString() == txId &&
+                  t['status'] == 'DECLINED')
+              .length;
+        }
+
+        // Kirim notifikasi hanya 1x per transaksi
+        final notifKey = 'notif_declined_${txId ?? ticketId}';
+        final alreadySent = box.get(notifKey, defaultValue: false) as bool;
+        if (!alreadySent) {
+          await NotificationService().notifyPaymentDeclined(
+            eventName: ticket['event_name']?.toString() ?? 'Event',
+            ticketCount: count,
+          );
+          await box.put(notifKey, true);
+          _refreshNotifCount();
+        }
+      }
+
+      // Update daftar tiket declined yang sudah diketahui
+      await box.put('known_declined_tickets', nowDeclined);
+      
+    } catch (e) {
+      debugPrint('Error check payment notifications: $e');
+    }
+  }
     
-  // Fungsi manggil API dari EventController
+  // Fetch events from API
   Future<void> _fetchEvents() async {
     final events = await _eventController.getAllEvents();
     if (mounted) {
@@ -123,107 +260,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _recommendedEvents = List.from(_allEvents)..shuffle(Random());
         
         _promoBanners = withImage.take(5).cast<Map<String, dynamic>>().toList();
-        // Fallback kalau belum ada event bergambar
-        if (_promoBanners.isEmpty) {
-          _promoBanners = [
-            {
-              'id': null,
-              'title': 'Promo Terbatas! Diskon 50%',
-              'image_url': 'https://images.unsplash.com/photo-1540039155733-d7696d4f198f?q=80&w=800&auto=format&fit=crop',
-            },
-            {
-              'id': null,
-              'title': 'Event Seni Terbaik di Kotamu',
-              'image_url': 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800&auto=format&fit=crop',
-            },
-            {
-              'id': null,
-              'title': 'Jangan Sampai Kehabisan Tiket!',
-              'image_url': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop',
-            },
-          ];
-        }
         _isLoading = false;
       });
     }
   }
 
-  /// Tentukan harga yang ditampilkan di card — early bird atau normal
-  Widget _buildEventPrice(Map<String, dynamic> event) {
-    final now = DateTime.now();
-    final regularPrice = event['price'] ?? 0;
-    final ebPrice = event['early_bird_price'];
-    final ebStart = event['early_bird_start'];
-    final ebEnd = event['early_bird_end'] ?? event['early_bird_deadline'];
 
-    // Convert early bird price to int
-    final ebPriceInt = (ebPrice is double) 
-        ? ebPrice.toInt() 
-        : int.tryParse(ebPrice.toString()) ?? 0;
-
-    bool isEarlyBirdActive = false;
-    
-    // Only consider early bird if price > 0 AND has valid dates
-    if (ebPriceInt > 0 && (ebStart != null || ebEnd != null)) {
-      try {
-        final startOk = ebStart == null || now.isAfter(DateTime.parse(ebStart.toString()));
-        final endOk = ebEnd == null || now.isBefore(DateTime.parse(ebEnd.toString()));
-        isEarlyBirdActive = startOk && endOk;
-      } catch (_) {}
-    }
-
-    final displayPrice = isEarlyBirdActive ? ebPriceInt : regularPrice;
-    final label = isEarlyBirdActive ? 'Early Bird' : 'Reguler';
-    final labelColor = isEarlyBirdActive ? Colors.orange : Colors.grey;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Rp ${_fmtPrice(displayPrice)}',
-              style: GoogleFonts.ebGaramond(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF9A3412),
-                  fontSize: 13),
-            ),
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-              decoration: BoxDecoration(
-                color: labelColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                    color: labelColor),
-              ),
-            ),
-          ],
-        ),
-        // Kalau early bird aktif, tampilkan harga coret normal
-        if (isEarlyBirdActive)
-          Text(
-            'Rp ${_fmtPrice(regularPrice)}',
-            style: const TextStyle(
-              fontSize: 10,
-              color: Colors.grey,
-              decoration: TextDecoration.lineThrough,
-            ),
-          ),
-      ],
-    );
-  }
-
-  String _fmtPrice(dynamic price) {
-    final p = (price is int) ? price : (double.tryParse(price.toString()) ?? 0).toInt();
-    return p.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
-  }
 
   @override
   void dispose() {
@@ -642,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         image: DecorationImage(
-                          image: NetworkImage(banner['image_url']!),
+                          image: NetworkImage(ApiConfig.normalizeImageUrl(banner['image_url']!)),
                           fit: BoxFit.cover,
                         ),
                         boxShadow: [
@@ -852,58 +894,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: displayedEvents.length,
                 itemBuilder: (context, index) {
                   final event = displayedEvents[index];
-                  return GestureDetector(
+                  return EventCard(
+                    event: event,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => EventDetailScreen(eventId: event['id'])));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EventDetailScreen(eventId: event['id']),
+                        ),
+                      );
                     },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                              child: Image.network(
-                                ApiConfig.normalizeImageUrl(event['image_url']), // Pastiin key ini sama kaya di database MySQL lu
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[200], child: const Center(child: Icon(LucideIcons.imageOff))),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4)),
-                                  child: Text(event['category'], style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(event['title'], style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF3A302A)), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(LucideIcons.calendar, size: 10, color: Colors.grey),
-                                    const SizedBox(width: 4),
-                                    Text(event['event_date'], style: const TextStyle(fontSize: 10, color: Colors.grey), overflow: TextOverflow.ellipsis,),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                _buildEventPrice(event),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   );
                 },
               ),
@@ -939,7 +939,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (index >= latestEvents.length) return const SizedBox();
                   final event = latestEvents[index];
                   
-                  return GestureDetector(
+                  return RecommendationCard(
+                    event: event,
+                    showNewBadge: true,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -948,126 +950,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
-                    child: Container(
-                      width: 160,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAFAF9),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFD8D0C8)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                child: Image.network(
-                                  ApiConfig.normalizeImageUrl(event['image_url']),
-                                  width: double.infinity,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    height: 120,
-                                    color: const Color(0xFFEAE2DA),
-                                    child: const Center(
-                                      child: Icon(LucideIcons.imageOff, color: Color(0xFF78706A)),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF9A3412),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'BARU',
-                                    style: GoogleFonts.manrope(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEAE2DA),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    event['category'],
-                                    style: GoogleFonts.manrope(
-                                      fontSize: 9,
-                                      color: const Color(0xFF9A3412),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  event['title'],
-                                  style: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: const Color(0xFF3A302A),
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(LucideIcons.calendar, size: 9, color: Color(0xFF78706A)),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        event['event_date'],
-                                        style: GoogleFonts.manrope(
-                                          fontSize: 9,
-                                          color: const Color(0xFF78706A),
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Rp ${_fmtPrice(event['price'])}',
-                                  style: GoogleFonts.ebGaramond(
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF9A3412),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   );
                 },
               ),

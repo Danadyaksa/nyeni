@@ -76,17 +76,31 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo atau icon aplikasi
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.palette,
-                size: 80,
-                color: Colors.white,
+            // Logo aplikasi
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset(
+                'assets/images/NYENI.jpeg',
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback jika logo tidak ditemukan
+                  return Container(
+                    width: 150,
+                    height: 150,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(
+                      Icons.palette,
+                      size: 80,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 24),

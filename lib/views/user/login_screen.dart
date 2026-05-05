@@ -185,14 +185,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF9A3412).withOpacity(0.08),
-                          shape: BoxShape.circle,
+                      // Logo Nyeni
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/NYENI.jpeg',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback jika logo tidak ditemukan
+                            return Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF9A3412).withOpacity(0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(LucideIcons.palette,
+                                  size: 44, color: Color(0xFF9A3412)),
+                            );
+                          },
                         ),
-                        child: const Icon(LucideIcons.palette,
-                            size: 44, color: Color(0xFF9A3412)),
                       ),
                       const SizedBox(height: 20),
                       Text(

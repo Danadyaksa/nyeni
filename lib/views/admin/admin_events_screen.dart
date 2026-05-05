@@ -73,19 +73,58 @@ class AdminEventsScreen extends StatefulWidget {
 
 class _AdminEventsScreenState extends State<AdminEventsScreen> {
   final _adminController = AdminController();
+  final TextEditingController _searchController = TextEditingController();
   List<dynamic> _events = [];
+  List<dynamic> _filteredEvents = [];
   bool _isLoading = true;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadEvents();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+      _filterEvents();
+    });
+  }
+
+  void _filterEvents() {
+    if (_searchQuery.isEmpty) {
+      _filteredEvents = _events;
+    } else {
+      _filteredEvents = _events.where((event) {
+        final title = event['title']?.toString().toLowerCase() ?? '';
+        final category = event['category']?.toString().toLowerCase() ?? '';
+        final location = event['location']?.toString().toLowerCase() ?? '';
+        return title.contains(_searchQuery) ||
+               category.contains(_searchQuery) ||
+               location.contains(_searchQuery);
+      }).toList();
+    }
   }
 
   Future<void> _loadEvents() async {
     setState(() => _isLoading = true);
     final data = await _adminController.getAllEventsAdmin();
-    if (mounted) setState(() { _events = data; _isLoading = false; });
+    if (mounted) {
+      setState(() {
+        _events = data;
+        _filterEvents();
+        _isLoading = false;
+      });
+    }
   }
 
   void _openForm({Map<String, dynamic>? event}) {
@@ -245,21 +284,114 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: _primary))
-          : _events.isEmpty
-              ? _buildEmpty()
-              : RefreshIndicator(
-                  onRefresh: _loadEvents,
-                  color: _primary,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: _events.length,
-                    itemBuilder: (_, i) => _buildEventCard(_events[i]),
+          : Column(
+              children: [
+                // Search bar
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAFAF9),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: _cardBorder.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Cari event...',
+                      hintStyle: GoogleFonts.manrope(
+                        color: _textSecondary,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        LucideIcons.search,
+                        color: _textSecondary,
+                        size: 18,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(
+                                LucideIcons.x,
+                                color: _textSecondary,
+                                size: 18,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: _cardBorder),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: _cardBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: _primary, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    style: GoogleFonts.manrope(
+                      color: _textPrimary,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
+                // Event list
+                Expanded(
+                  child: _filteredEvents.isEmpty
+                      ? _buildEmpty()
+                      : RefreshIndicator(
+                          onRefresh: _loadEvents,
+                          color: _primary,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                            itemCount: _filteredEvents.length,
+                            itemBuilder: (_, i) => _buildEventCard(_filteredEvents[i]),
+                          ),
+                        ),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildEmpty() {
+    if (_searchQuery.isNotEmpty) {
+      // Empty search results
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(LucideIcons.searchX, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'Tidak ada hasil untuk "$_searchQuery"',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Coba kata kunci lain',
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // No events at all
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

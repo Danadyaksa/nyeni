@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../controllers/profile_controller.dart';
@@ -261,25 +260,12 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
         final user = jsonDecode(userStr);
         final userId = user['id'].toString();
 
-        // 1. Simpan Rekor Waktu ke Node.js (game_scores)
-        await http.post(
-          Uri.parse("${GameController.baseUrl}/game/save-score"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
-            "user_id": userId,
-            "username": user['full_name'] ?? 'Pemain Nyeni',
-            "game_name": "Labirin Gyro",
-            "level": currentLevel,
-            "best_time": timeTaken
-          })
-        );
-
-        // 2. Ambil total_xp terbaru dari database
+        // Ambil total_xp terbaru dari database
         final freshUser = await _profileController.getUserProfile(userId);
         if (freshUser == null) return;
         
         int currentXp = freshUser.totalXp;
-        int newXp = currentXp + 100; // Reward sama 100 XP
+        int newXp = currentXp + 100; // Reward 100 XP
         
         // Hitung level menggunakan GameController
         int newLevel = _gameController.calculateLevel(newXp);
@@ -289,7 +275,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
           updatedCompletedLevel = _userMaxLevel + 1;
         }
 
-        // 3. Update Progress ke Node.js (tabel users)
+        // Update Progress ke Node.js (tabel users)
         await _gameController.updateProgress(
           userId: userId,
           totalXp: newXp,
@@ -346,7 +332,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
             const SizedBox(height: 16),
             Text(isWin 
-              ? "Luar biasa! Kamu mendapat +100 XP. Kalau kamu memecahkan rekor lamamu, datanya sudah masuk ke Leaderboard!" 
+              ? "Luar biasa! Kamu mendapat +100 XP dan berhasil menyelesaikan level ini dalam waktu $timeTaken detik!" 
               : (isTimeout ? "Kamu terlalu lambat mencapai garis finish. Coba lagi lebih cepat!" : "Bola masuk ke lubang jebakan. Konsentrasi dan atur kemiringan HP-mu perlahan-lahan."), 
               textAlign: TextAlign.center, style: GoogleFonts.manrope(color: const Color(0xFF78706A), height: 1.5)),
             const SizedBox(height: 32),

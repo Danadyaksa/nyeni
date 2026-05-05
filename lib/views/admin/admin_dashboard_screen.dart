@@ -124,7 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     children: [
                       _buildStatCard(
                         icon: LucideIcons.clock,
-                        label: 'Verifikasi',
+                        label: 'Menunggu Verifikasi',
                         value: '$_pendingCount',
                         color: const Color(0xFF9A3412),
                         urgent: _pendingCount > 0,
@@ -143,7 +143,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       _buildStatCard(
                         icon: LucideIcons.trendingUp,
-                        label: 'Revenue',
+                        label: 'Revenue Bersih',
                         value: _formatCurrency(_totalRevenue),
                         color: const Color(0xFF9A3412),
                         smallText: true,
@@ -252,11 +252,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD8D0C8).withOpacity(0.6), width: 1),
+        border: Border.all(
+          color: urgent 
+              ? const Color(0xFFEF4444) // Red border kalau urgent
+              : const Color(0xFFD8D0C8).withOpacity(0.6),
+          width: urgent ? 2 : 1, // Border lebih tebal kalau urgent
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3A302A).withOpacity(0.04),
-            blurRadius: 16,
+            color: urgent
+                ? const Color(0xFFEF4444).withOpacity(0.15) // Red glow kalau urgent
+                : const Color(0xFF3A302A).withOpacity(0.04),
+            blurRadius: urgent ? 12 : 16,
             offset: const Offset(0, 2),
           ),
         ],
@@ -274,9 +281,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   label,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color: const Color(0xFF605850),
+                    color: urgent 
+                        ? const Color(0xFFEF4444) // Red text kalau urgent
+                        : const Color(0xFF605850),
                     letterSpacing: 0.2,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: urgent ? FontWeight.w600 : FontWeight.w400,
                     height: 1.3,
                   ),
                   maxLines: 2,
@@ -284,7 +293,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(icon, color: color, size: 16),
+              Icon(
+                icon, 
+                color: urgent ? const Color(0xFFEF4444) : color, 
+                size: 16,
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -293,7 +306,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             style: GoogleFonts.ebGaramond(
               fontSize: 28,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF3A302A),
+              color: urgent 
+                  ? const Color(0xFFEF4444) // Red value kalau urgent
+                  : const Color(0xFF3A302A),
               height: 1.1,
             ),
           ),
