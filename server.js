@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -18,9 +18,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ==========================================
 // KONEKSI DATABASE
-// ==========================================
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -45,9 +43,7 @@ function buildFileUrl(filename) {
   return `/uploads/${filename}`;
 }
 
-// ==========================================
 // AUTH: REGISTER
-// ==========================================
 app.post('/api/auth/register', async (req, res) => {
   const { email, password, full_name } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,9 +59,7 @@ app.post('/api/auth/register', async (req, res) => {
   });
 });
 
-// ==========================================
 // AUTH: LOGIN (mengembalikan field 'role')
-// ==========================================
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ?';
@@ -87,9 +81,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// ==========================================
 // AUTH: VERIFY PASSWORD (untuk enable biometric, tanpa update session)
-// ==========================================
 app.post('/api/auth/verify-password', (req, res) => {
   const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ?';
@@ -107,9 +99,7 @@ app.post('/api/auth/verify-password', (req, res) => {
   });
 });
 
-// ==========================================
 // USER: AMBIL PROFIL
-// ==========================================
 app.get('/api/user/:id', (req, res) => {
   db.query('SELECT * FROM users WHERE id = ?', [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -119,9 +109,7 @@ app.get('/api/user/:id', (req, res) => {
   });
 });
 
-// ==========================================
 // USER: UPDATE NAMA
-// ==========================================
 app.post('/api/user/update-name', (req, res) => {
   const { id, full_name } = req.body;
   db.query('UPDATE users SET full_name = ? WHERE id = ?', [full_name, id], (err) => {
@@ -130,9 +118,7 @@ app.post('/api/user/update-name', (req, res) => {
   });
 });
 
-// ==========================================
 // USER: UPDATE EMAIL
-// ==========================================
 app.post('/api/user/update-email', (req, res) => {
   const { id, email } = req.body;
   
@@ -157,9 +143,7 @@ app.post('/api/user/update-email', (req, res) => {
   });
 });
 
-// ==========================================
 // USER: UPDATE PASSWORD
-// ==========================================
 app.post('/api/user/update-password', async (req, res) => {
   const { id, password } = req.body;
   
@@ -174,9 +158,7 @@ app.post('/api/user/update-password', async (req, res) => {
   });
 });
 
-// ==========================================
 // USER: UPDATE PROGRESS GAME & XP
-// ==========================================
 app.post('/api/user/update-progress', (req, res) => {
   const { id, total_xp, level, completed_levels_trivia, completed_levels_labirin } = req.body;
   const sql = `UPDATE users SET total_xp = ?, level = ?, completed_levels_trivia = ?, completed_levels_labirin = ? WHERE id = ?`;
@@ -186,9 +168,7 @@ app.post('/api/user/update-progress', (req, res) => {
   });
 });
 
-// ==========================================
 // MULTER: KONFIGURASI UPLOAD AVATAR
-// ==========================================
 if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 
 const storage = multer.diskStorage({
@@ -198,9 +178,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ==========================================
 // USER: UPLOAD AVATAR
-// ==========================================
 app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
   const userId = req.body.id;
   if (!req.file)
@@ -213,9 +191,7 @@ app.post('/api/user/upload-avatar', upload.single('avatar'), (req, res) => {
   });
 });
 
-// ==========================================
 // EVENTS: AMBIL SEMUA (aktif saja, untuk user)
-// ==========================================
 app.get('/api/events', (req, res) => {
   // Hanya tampilkan event yang:
   // 1. is_active = 1
@@ -243,9 +219,7 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-// ==========================================
 // EVENTS: DETAIL + OPSI TIKET
-// ==========================================
 app.get('/api/events/:id', (req, res) => {
   db.query('SELECT * FROM events WHERE id = ?', [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -305,10 +279,8 @@ app.get('/api/events/:id', (req, res) => {
   });
 });
 
-// ==========================================
 // TICKETS: CHECKOUT BULK (N tiket sekaligus, masing-masing QR unik)
 // Biaya layanan flat per transaksi, bukan per tiket
-// ==========================================
 app.post('/api/tickets/checkout-bulk', async (req, res) => {
   const { user_id, event_name, event_date, count, unique_code, service_fee, ticket_price, total_amount } = req.body;
   const qty = parseInt(count) || 1;
@@ -353,9 +325,7 @@ app.post('/api/tickets/checkout-bulk', async (req, res) => {
   });
 });
 
-// ==========================================
 // TICKETS: CHECKOUT SINGLE (tetap ada untuk kompatibilitas)
-// ==========================================
 app.post('/api/tickets/checkout', (req, res) => {
   const { user_id, event_name, event_date, unique_code, service_fee, ticket_price, total_amount } = req.body;
   const ticketId = crypto.randomUUID();
@@ -369,9 +339,7 @@ app.post('/api/tickets/checkout', (req, res) => {
   });
 });
 
-// ==========================================
 // TICKETS: RIWAYAT USER (JOIN image_url dari events)
-// ==========================================
 app.get('/api/tickets/my-tickets/:user_id', (req, res) => {
   const sql = `
     SELECT tickets.*, events.image_url, events.event_date
@@ -412,9 +380,7 @@ app.get('/api/tickets/my-tickets/:user_id', (req, res) => {
   });
 });
 
-// ==========================================
 // TICKETS: SCAN (endpoint lama untuk user/gate)
-// ==========================================
 app.post('/api/tickets/scan', (req, res) => {
   const { ticket_id } = req.body;
   db.query('SELECT * FROM tickets WHERE id = ?', [ticket_id], (err, results) => {
@@ -445,9 +411,7 @@ app.post('/api/tickets/scan', (req, res) => {
   });
 });
 
-// ==========================================
 // FEEDBACK: AMBIL SEMUA
-// ==========================================
 app.get('/api/feedbacks', (req, res) => {
   db.query('SELECT * FROM tpm_feedbacks ORDER BY created_at DESC', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -455,9 +419,7 @@ app.get('/api/feedbacks', (req, res) => {
   });
 });
 
-// ==========================================
 // FEEDBACK: KIRIM BARU
-// ==========================================
 app.post('/api/feedbacks', (req, res) => {
   const { user_id, username, feedback, rating } = req.body;
   if (!feedback || feedback.trim() === '')
@@ -471,13 +433,7 @@ app.post('/api/feedbacks', (req, res) => {
   });
 });
 
-// ============================================================
-// ==================== ADMIN ROUTES ==========================
-// ============================================================
-
-// ==========================================
-// ADMIN: SEMUA TIKET — digroup per transaksi
-// ==========================================
+// Admin: Semua tiket (digroup per transaksi)
 app.get('/api/admin/tickets', (req, res) => {
   // Ambil 1 row per transaksi (tiket pertama sebagai representasi)
   // Sertakan jumlah tiket dalam transaksi tersebut
@@ -516,9 +472,7 @@ app.get('/api/admin/tickets', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: TIKET PENDING — digroup per transaksi
-// ==========================================
 app.get('/api/admin/tickets/pending', (req, res) => {
   const sql = `
     SELECT
@@ -556,11 +510,8 @@ app.get('/api/admin/tickets/pending', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: ACCEPT TRANSAKSI → semua tiket dalam transaksi jadi ACTIVE
-// ==========================================
 // ADMIN: ACCEPT TRANSAKSI → semua tiket dalam transaksi jadi ACTIVE + KASIH XP KE USER
-// ==========================================
 app.put('/api/admin/tickets/:id/accept', (req, res) => {
   // Step 1: Ambil info tiket & transaction_id
   db.query('SELECT transaction_id, user_id FROM tickets WHERE id = ?', [req.params.id], (err, rows) => {
@@ -641,9 +592,7 @@ app.put('/api/admin/tickets/:id/accept', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: DECLINE TRANSAKSI → semua tiket dalam transaksi jadi DECLINED
-// ==========================================
 app.put('/api/admin/tickets/:id/decline', (req, res) => {
   db.query('SELECT transaction_id FROM tickets WHERE id = ?', [req.params.id], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -664,9 +613,7 @@ app.put('/api/admin/tickets/:id/decline', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: SCAN QR → EXPIRED
-// ==========================================
 app.put('/api/admin/tickets/:id/scan', (req, res) => {
   // Join dengan events untuk mendapatkan event_date
   const sql = `
@@ -732,9 +679,7 @@ app.put('/api/admin/tickets/:id/scan', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: SEMUA EVENT (termasuk nonaktif)
-// ==========================================
 app.get('/api/admin/events', (req, res) => {
   db.query('SELECT * FROM events ORDER BY id DESC', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -758,9 +703,7 @@ app.get('/api/admin/events', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: UPLOAD GAMBAR EVENT
-// ==========================================
 app.post('/api/admin/events/upload-image', upload.single('image'), (req, res) => {
   if (!req.file)
     return res.status(400).json({ error: 'Tidak ada file gambar yang dikirim!' });
@@ -768,9 +711,7 @@ app.post('/api/admin/events/upload-image', upload.single('image'), (req, res) =>
   res.json({ image_url: imageUrl });
 });
 
-// ==========================================
 // ADMIN: TAMBAH EVENT
-// ==========================================
 app.post('/api/admin/events', (req, res) => {
   const {
     title, category, event_date, event_start_date, event_end_date,
@@ -807,9 +748,7 @@ app.post('/api/admin/events', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: UPDATE EVENT
-// ==========================================
 app.put('/api/admin/events/:id', (req, res) => {
   const {
     title, category, event_date, event_start_date, event_end_date,
@@ -846,9 +785,7 @@ app.put('/api/admin/events/:id', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: HAPUS EVENT
-// ==========================================
 app.delete('/api/admin/events/:id', (req, res) => {
   // Step 1: Ambil data event untuk cek tanggal
   db.query('SELECT * FROM events WHERE id = ?', [req.params.id], (err, eventResult) => {
@@ -907,11 +844,8 @@ app.delete('/api/admin/events/:id', (req, res) => {
   });
 });
 
-// ==========================================
 // ADMIN: REVENUE SUMMARY
-// ==========================================
 // ADMIN: REVENUE SUMMARY
-// ==========================================
 app.get('/api/admin/revenue', (req, res) => {
 
   const sqlTotal = `
@@ -1037,9 +971,7 @@ app.get('/api/admin/revenue', (req, res) => {
   });
 });
 
-// ==========================================
 // JALANKAN SERVER
-// ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server berjalan di http://localhost:${PORT}`);

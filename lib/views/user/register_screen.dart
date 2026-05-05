@@ -31,7 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // ─── Validasi email format ────────────────────────────────────────────────
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$').hasMatch(email);
   }
@@ -110,7 +109,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 36),
 
-              // ── Username ──
               _label('Username'),
               const SizedBox(height: 6),
               TextFormField(
@@ -128,7 +126,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ── Email ──
               _label('Email'),
               const SizedBox(height: 6),
               TextFormField(
@@ -149,7 +146,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ── Password ──
               _label('Password'),
               const SizedBox(height: 6),
               TextFormField(
@@ -177,7 +173,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ── Konfirmasi Password ──
               _label('Konfirmasi Password'),
               const SizedBox(height: 6),
               TextFormField(
@@ -206,7 +201,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Hint ketentuan password
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -230,7 +224,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Tombol daftar
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

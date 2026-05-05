@@ -120,12 +120,9 @@ class _BagasScreenState extends State<BagasScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty || _userId == null) return;
 
-    // ==========================================
-    // LOGIKA LIMITER (100% PAKAI HIVE) - PER USER
-    // ==========================================
+    // Logika limiter: 5 pertanyaan per 15 menit (per user)
     final now = DateTime.now();
     
-    // Ambil data memori dari Hive dengan key per-user
     final timeWindowKey = 'bagas_time_window_$_userId';
     final msgCountKey = 'bagas_msg_count_$_userId';
     
@@ -134,7 +131,6 @@ class _BagasScreenState extends State<BagasScreen> {
 
     DateTime windowStart = lastWindowStr != null ? DateTime.parse(lastWindowStr) : now;
 
-    // Reset hitungan jika sudah 15 menit
     if (now.difference(windowStart).inMinutes >= 15) {
       windowStart = now;
       msgCount = 0;
@@ -154,11 +150,9 @@ class _BagasScreenState extends State<BagasScreen> {
       return; 
     }
 
-    // Update limit ke Hive dengan key per-user
     msgCount++;
     await _myBox.put(msgCountKey, msgCount);
     await _myBox.put(timeWindowKey, windowStart.toIso8601String());
-    // ==========================================
 
     setState(() {
       _messages.add({'isUser': true, 'text': text});

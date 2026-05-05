@@ -14,11 +14,7 @@ class AuthService {
   final _secureStorage = const FlutterSecureStorage();
   final _localAuth = LocalAuthentication();
 
-  // ==========================================
-  // BIOMETRIC AUTHENTICATION
-  // ==========================================
-  
-  /// Cek apakah device support biometric
+  // Cek apakah device support biometric
   Future<bool> isBiometricAvailable() async {
     try {
       return await _localAuth.canCheckBiometrics && await _localAuth.isDeviceSupported();

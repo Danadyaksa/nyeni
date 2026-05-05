@@ -56,9 +56,7 @@ class MoreMenuSheet {
     );
   }
 
-  // ==========================================
-  // 1. DIALOG KONVERSI MATA UANG
-  // ==========================================
+  // Dialog konversi mata uang
   static void _showCurrencyDialog(BuildContext context) {
     String fromCurrency = 'USD';
     String toCurrency = 'IDR';
@@ -143,9 +141,7 @@ class MoreMenuSheet {
     );
   }
 
-  // ==========================================
-  // 2. DIALOG KONVERSI WAKTU
-  // ==========================================
+  // Dialog konversi waktu
   static void _showTimeDialog(BuildContext context) {
     final now = DateTime.now();
     int inputHour = now.hour;
@@ -398,9 +394,7 @@ class MoreMenuSheet {
     );
   }
 
-  // ==========================================
-  // 3. DIALOG ABOUT US
-  // ==========================================
+  // Dialog about us
   static void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -440,9 +434,7 @@ class MoreMenuSheet {
     );
   }
 
-  // ==========================================
-  // 3.5. DIALOG KONTAK KAMI
-  // ==========================================
+  // Dialog kontak kami
   static void _showContactDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -554,17 +546,13 @@ class MoreMenuSheet {
     );
   }
 
-  // ==========================================
-  // 4. MUNCULIN FORUM KRITIK & SARAN
-  // ==========================================
+  // Dialog feedback
   static void _showFeedbackDialog(BuildContext context) {
     showDialog(context: context, builder: (context) => const FeedbackForumWidget());
   }
 }
 
-// ==========================================
-// WIDGET FORUM KRITIK & SARAN INTERAKTIF
-// ==========================================
+// Widget forum kritik & saran
 class FeedbackForumWidget extends StatefulWidget {
   const FeedbackForumWidget({super.key});
 

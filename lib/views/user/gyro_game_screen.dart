@@ -62,9 +62,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     super.dispose();
   }
 
-  // ==========================================
-  // LOAD PROGRESS DARI MYSQL / NODE.JS
-  // ==========================================
+  // Load progress dari database
   Future<void> _loadUserProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -239,9 +237,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
     return false;
   }
 
-  // ==========================================
-  // UPDATE PROGRESS KE MYSQL / NODE.JS
-  // ==========================================
+  // Update progress ke database
   void _winGame() async {
     _isPlaying = false;
     _accelSubscription?.cancel();

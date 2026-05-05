@@ -1,54 +1,36 @@
-/// API Configuration
-/// 
-/// Centralized API base URL configuration.
-/// Change this URL when switching networks (WiFi, mobile data, etc.)
+// Konfigurasi API - Ganti baseUrl sesuai jaringan yang dipakai
 class ApiConfig {
-  // ==========================================
-  // BASE URL CONFIGURATION
-  // ==========================================
+  // Base URL - Ganti IP sesuai network kamu
+  // Emulator: "http://10.0.2.2:3000/api"
+  // Local Network: "http://192.168.x.x:3000/api"
+  static const String baseUrl = "http://172.20.10.6:3000/api";
   
-  /// Main API base URL
-  /// 
-  /// Options:
-  /// - Emulator: "http://10.0.2.2:3000/api"
-  /// - Kos Atilla: "http://192.168.0.162:3000/api"
-  /// - Kos Apis: "http://192.168.18.85:3000/api"
-  /// - Local Network: "http://192.168.x.x:3000/api"
-  /// - Production: "https://your-domain.com/api"
-  static const String baseUrl = "http://192.168.0.162:3000/api";
-  
-  /// Server host (without /api suffix)
-  /// Used for image URLs and other resources
   static String get serverHost => baseUrl.replaceAll('/api', '');
-  
-  // ==========================================
-  // ENDPOINT HELPERS
-  // ==========================================
-  
-  /// Auth endpoints
+
+  // Auth endpoints
   static String get loginUrl => "$baseUrl/login";
   static String get registerUrl => "$baseUrl/register";
   
-  /// Event endpoints
+  // Event endpoints
   static String get eventsUrl => "$baseUrl/events";
   static String eventDetailUrl(int id) => "$baseUrl/events/$id";
   
-  /// Ticket endpoints
+  // Ticket endpoints
   static String get ticketsUrl => "$baseUrl/tickets";
   static String myTicketsUrl(String userId) => "$baseUrl/tickets/my-tickets/$userId";
   
-  /// User endpoints
+  // User endpoints
   static String userProfileUrl(String userId) => "$baseUrl/user/$userId";
   static String get updateProfileUrl => "$baseUrl/user/update";
   static String get uploadAvatarUrl => "$baseUrl/user/upload-avatar";
   
-  /// Game endpoints
+  // Game endpoints
   static String get updateGameProgressUrl => "$baseUrl/game/progress";
   
-  /// Feedback endpoints
+  // Feedback endpoints
   static String get feedbacksUrl => "$baseUrl/feedbacks";
   
-  /// Admin endpoints
+  // Admin endpoints
   static String get adminEventsUrl => "$baseUrl/admin/events";
   static String adminEventDetailUrl(int id) => "$baseUrl/admin/events/$id";
   static String get adminUploadImageUrl => "$baseUrl/admin/events/upload-image";
@@ -59,33 +41,20 @@ class ApiConfig {
   static String get adminRevenueUrl => "$baseUrl/admin/revenue";
   static String get adminFeedbacksUrl => "$baseUrl/admin/feedbacks";
   
-  // ==========================================
-  // UTILITY METHODS
-  // ==========================================
-  
-  /// Normalize image URL to use current server host
-  /// 
-  /// Handles 3 cases:
-  /// 1. Relative path (/uploads/...) → prepend current serverHost
-  /// 2. localhost URL → replace with current serverHost
-  /// 3. Any http://IP:PORT URL → replace host with current serverHost
+  // Normalisasi URL gambar - handle path relatif & localhost
   static String normalizeImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
     
-    // Case 1: path relatif seperti /uploads/filename.jpg
     if (url.startsWith('/')) {
       return '$serverHost$url';
     }
     
-    // Case 2 & 3: URL absolut — replace host lama dengan host terkini
-    // Cocokkan pola http://IP_ATAU_HOSTNAME:PORT atau http://localhost:PORT
     return url.replaceFirstMapped(
       RegExp(r'http://[^/]+'),
       (_) => serverHost,
     );
   }
   
-  /// Check if URL is valid
   static bool isValidUrl(String url) {
     try {
       final uri = Uri.parse(url);

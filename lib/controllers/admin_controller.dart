@@ -10,11 +10,7 @@ class AdminController {
   // Gunakan ApiConfig untuk base URL
   static String get baseUrl => ApiConfig.baseUrl;
 
-  // ==========================================
-  // EVENT MANAGEMENT
-  // ==========================================
-
-  /// Create new event
+  // Create new event
   Future<Map<String, dynamic>> createEvent({
     required String name,
     required String category,
@@ -26,6 +22,15 @@ class AdminController {
     required int price,
     String? imageUrl,
     bool? isActive,
+    String? eventStartDate,
+    String? eventEndDate,
+    String? openTime,
+    String? closeTime,
+    String? regularStart,
+    String? regularEnd,
+    int? earlyBirdPrice,
+    String? earlyBirdStart,
+    String? earlyBirdEnd,
   }) async {
     try {
       final body = {
@@ -39,6 +44,15 @@ class AdminController {
         "price": price,
         "image_url": imageUrl,
         "is_active": isActive ?? true, // Default true jika tidak di-set
+        "event_start_date": eventStartDate,
+        "event_end_date": eventEndDate,
+        "open_time": openTime,
+        "close_time": closeTime,
+        "regular_start": regularStart,
+        "regular_end": regularEnd,
+        "early_bird_price": earlyBirdPrice,
+        "early_bird_start": earlyBirdStart,
+        "early_bird_end": earlyBirdEnd,
       };
       
       print('🔵 AdminController.createEvent - Sending to backend: $body');
@@ -175,11 +189,7 @@ class AdminController {
     }
   }
 
-  // ==========================================
-  // TICKET MANAGEMENT
-  // ==========================================
-
-  /// Get all tickets
+  // Get all tickets
   Future<List<Ticket>> getAllTickets() async {
     try {
       final response = await http.get(Uri.parse("$baseUrl/admin/tickets"));
@@ -236,11 +246,7 @@ class AdminController {
     }
   }
 
-  // ==========================================
-  // FEEDBACK MANAGEMENT
-  // ==========================================
-
-  /// Get all feedbacks
+  // Get all feedbacks
   Future<List<Feedback>> getAllFeedbacks() async {
     try {
       final response = await http.get(Uri.parse("$baseUrl/admin/feedbacks"));
@@ -255,11 +261,7 @@ class AdminController {
     }
   }
 
-  // ==========================================
-  // STATISTICS
-  // ==========================================
-
-  /// Get revenue statistics
+  // Get revenue statistics
   Future<Map<String, dynamic>> getRevenue() async {
     try {
       final response = await http.get(Uri.parse("$baseUrl/admin/revenue"));

@@ -8,11 +8,7 @@ class BiometricController {
   final _localAuth = LocalAuthentication();
   final _authController = AuthController();
 
-  // ==========================================
-  // BIOMETRIC OPERATIONS
-  // ==========================================
-
-  /// Cek apakah device support biometric
+  // Cek apakah device support biometric
   Future<bool> isBiometricAvailable() async {
     try {
       return await _localAuth.canCheckBiometrics && await _localAuth.isDeviceSupported();

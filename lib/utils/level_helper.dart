@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 /// Helper untuk sistem level & XP
 class LevelHelper {
-  // XP requirements per level
+  // XP requirements per level (minimum XP untuk MASUK level tersebut)
   static const Map<int, int> _levelXP = {
-    1: 0,
-    2: 100,
-    3: 250,
-    4: 450,
-    5: 700,
-    6: 1000,
-    7: 1350,
-    8: 1750,
-    9: 2200,
-    10: 2700,
+    1: 0,      // Level 1: 0-99 XP
+    2: 100,    // Level 2: 100-249 XP
+    3: 250,    // Level 3: 250-449 XP
+    4: 450,    // Level 4: 450-699 XP
+    5: 700,    // Level 5: 700-999 XP
+    6: 1000,   // Level 6: 1000-1349 XP
+    7: 1350,   // Level 7: 1350-1749 XP
+    8: 1750,   // Level 8: 1750-2199 XP
+    9: 2200,   // Level 9: 2200-2699 XP
+    10: 2700,  // Level 10: 2700+ XP (max)
   };
 
   /// Get level tier (Bronze, Silver, Gold)
@@ -28,11 +28,11 @@ class LevelHelper {
     final tier = getTier(level);
     switch (tier) {
       case 'Gold':
-        return const Color(0xFFEAB308); // Gold
+        return const Color(0xFFF59E0B); // Bright Gold
       case 'Silver':
-        return const Color(0xFF94A3B8); // Silver
+        return const Color(0xFF64748B); // Darker Silver
       default:
-        return const Color(0xFF92400E); // Bronze
+        return const Color(0xFFD97706); // Bright Bronze/Orange
     }
   }
 

@@ -13,7 +13,7 @@ import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../config/api_config.dart';
 
-// ─── Indonesian month names ───────────────────────────────────────────────────
+// Indonesian month names
 const List<String> _bulanId = [
   '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
   'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
@@ -61,8 +61,6 @@ const Color _background = Color(0xFFFAF5EE);
 const Color _cardBorder = Color(0xFFD8D0C8);
 const Color _textPrimary = Color(0xFF3A302A);
 const Color _textSecondary = Color(0xFF78706A);
-
-// ─── Main Screen ─────────────────────────────────────────────────────────────
 
 class AdminEventsScreen extends StatefulWidget {
   const AdminEventsScreen({super.key});
@@ -171,7 +169,16 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
               longitude: data['longitude'],
               price: data['price'],
               imageUrl: data['image_url'],
-              isActive: (data['is_active'] == 1 || data['is_active'] == true), // Convert int/bool to bool
+              isActive: (data['is_active'] == 1 || data['is_active'] == true),
+              eventStartDate: data['event_start_date'],
+              eventEndDate: data['event_end_date'],
+              openTime: data['open_time'],
+              closeTime: data['close_time'],
+              regularStart: data['regular_start'],
+              regularEnd: data['regular_end'],
+              earlyBirdPrice: data['early_bird_price'],
+              earlyBirdStart: data['early_bird_start'],
+              earlyBirdEnd: data['early_bird_end'],
             );
             print('🔵 Create event result: $result');
           }
@@ -584,8 +591,6 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
   }
 }
 
-// ─── Event Form Bottom Sheet ──────────────────────────────────────────────────
-
 class _EventFormSheet extends StatefulWidget {
   final Map<String, dynamic>? event;
   final Future<void> Function(Map<String, dynamic> data) onSaved;
@@ -649,8 +654,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     _getCurrentLocation(); // Ambil lokasi GPS saat form dibuka
   }
 
-  // ─── Get Current Location (GPS) ────────────────────────────────────────────
-
+  // Get current location (GPS)
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
@@ -694,14 +698,26 @@ class _EventFormSheetState extends State<_EventFormSheet> {
 
     _titleCtrl.text = e['title']?.toString() ?? '';
     _locationCtrl.text = e['location']?.toString() ?? '';
-    _priceCtrl.text = (e['price'] ?? '').toString();
-    _earlyBirdPriceCtrl.text = (e['early_bird_price'] ?? '').toString();
+    
+    // Fix: Pastikan price tidak kosong
+    final price = e['price'];
+    if (price != null && price.toString().isNotEmpty && price.toString() != 'null') {
+      _priceCtrl.text = price.toString();
+    }
+    
+    // Fix: Pastikan early bird price tidak kosong
+    final earlyBirdPrice = e['early_bird_price'];
+    if (earlyBirdPrice != null && earlyBirdPrice.toString().isNotEmpty && earlyBirdPrice.toString() != 'null') {
+      _earlyBirdPriceCtrl.text = earlyBirdPrice.toString();
+    }
+    
     _descCtrl.text = e['description']?.toString() ?? '';
 
     if (_categories.contains(e['category'])) {
       _category = e['category'].toString();
     }
 
+    // Fix: Parse tanggal dengan lebih robust
     _eventStartDate = _parseDate(e['event_start_date']);
     _eventEndDate = _parseDate(e['event_end_date']);
     _showEndDate = _eventEndDate != null;
@@ -715,18 +731,33 @@ class _EventFormSheetState extends State<_EventFormSheet> {
 
     _isActive = (e['is_active'] == 1 || e['is_active'] == true);
 
-    // Parse jam buka/tutup dari format "HH:MM:SS"
+    // Parse jam buka/tutup dari format "HH:MM:SS" atau "HH:MM"
     _openTime = _parseTime(e['open_time']?.toString());
     _closeTime = _parseTime(e['close_time']?.toString());
 
+    // Fix: Parse koordinat dengan lebih robust
     final lat = e['latitude'];
     final lng = e['longitude'];
     if (lat != null && lng != null) {
-      _pickedLocation = LatLng(
-        (lat is double) ? lat : double.tryParse(lat.toString()) ?? 0,
-        (lng is double) ? lng : double.tryParse(lng.toString()) ?? 0,
-      );
+      final latDouble = (lat is double) ? lat : double.tryParse(lat.toString());
+      final lngDouble = (lng is double) ? lng : double.tryParse(lng.toString());
+      
+      if (latDouble != null && lngDouble != null && latDouble != 0 && lngDouble != 0) {
+        _pickedLocation = LatLng(latDouble, lngDouble);
+      }
     }
+    
+    // Debug log untuk cek data yang di-load
+    debugPrint('🔵 Prefill data:');
+    debugPrint('  - Event Start: $_eventStartDate');
+    debugPrint('  - Event End: $_eventEndDate');
+    debugPrint('  - Regular Start: $_regularStart');
+    debugPrint('  - Regular End: $_regularEnd');
+    debugPrint('  - Early Bird Start: $_earlyBirdStart');
+    debugPrint('  - Early Bird End: $_earlyBirdEnd');
+    debugPrint('  - Open Time: $_openTime');
+    debugPrint('  - Close Time: $_closeTime');
+    debugPrint('  - Location: $_pickedLocation');
   }
 
   @override
@@ -740,8 +771,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     super.dispose();
   }
 
-  // ─── Date Picker ───────────────────────────────────────────────────────────
-
+  // Date picker
   Future<DateTime?> _pickDate({DateTime? initial, DateTime? firstDate, DateTime? lastDate}) async {
     return showDatePicker(
       context: context,
@@ -810,8 +840,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     );
   }
 
-  // ─── Image Picker & Upload ─────────────────────────────────────────────────
-
+  // Image picker & upload
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
@@ -844,8 +873,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     }
   }
 
-  // ─── Save ──────────────────────────────────────────────────────────────────
-
+  // Save event
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -917,8 +945,6 @@ class _EventFormSheetState extends State<_EventFormSheet> {
 
     await widget.onSaved(data);
   }
-
-  // ─── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -1198,8 +1224,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     );
   }
 
-  // ─── Form Widgets ──────────────────────────────────────────────────────────
-
+  // Form widgets
   Widget _sectionLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

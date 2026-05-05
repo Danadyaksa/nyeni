@@ -223,12 +223,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
     }
   }
 
-  // ==========================================
-  // DATA KUIS 
-  // ==========================================
-  // ==========================================
-  // DATA KUIS FINAL: 50 SOAL (5 LEVEL x 10 SOAL)
-  // ==========================================
+  // Data kuis: 50 soal (5 level x 10 soal)
   final Map<int, List<Map<String, dynamic>>> _allQuizData = {
     1: [
       {'q': 'Pelukis maestro Indonesia beraliran ekspresionisme adalah...', 'opts': ['Raden Saleh', 'Affandi', 'Basuki Abdullah', 'Sudjojono'], 'ans': 'Affandi', 'fact': 'Affandi dikenal dunia karena teknik eksentriknya dalam melukis langsung tanpa kuas.'},
