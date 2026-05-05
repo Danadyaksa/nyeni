@@ -85,22 +85,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAE2DA),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFD8D0C8), width: 2),
                   ),
-                  child: Column(
-                    children: [
-                      const Icon(LucideIcons.qrCode, size: 150, color: Color(0xFF9A3412)),
-                      const SizedBox(height: 8),
-                      Text(
-                        "QRIS NYENI INDONESIA",
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: const Color(0xFF3A302A),
-                        ),
-                      ),
-                    ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/qrisnyeni.jpeg',
+                      width: 280,
+                      height: 280,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "QRIS NYENI INDONESIA",
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: const Color(0xFF3A302A),
                   ),
                 ),
               ] else ...[
