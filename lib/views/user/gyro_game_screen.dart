@@ -45,7 +45,7 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
   int _timeLeft = 0; 
 
   final Map<int, int> _timeLimits = {
-    1: 15, 2: 20, 3: 25, 4: 30, 5: 35,
+    1: 15, 2: 15, 3: 15, 4: 15, 5: 15,
   };
 
   @override
@@ -86,16 +86,57 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
 
   final Map<int, List<String>> _mazes = {
     1: [
-      "WWWWWWWWWW", "WHWW.....W", "WS.WWWWW.W", "W....W...W", "WWWW.W.W.W",
-      "W..W...W.W", "W.WWWWWW.W", "W.W......W", "W.W.WWWWWW", "W.W......W",
-      "W.WWWWWW.W", "W........W", "W.WWWWWWWW", "W.......FW", "WWWWWWWWWW",
+      "WWWWWWWWWW", 
+      "WHWW.....W", 
+      "WS.WWWWW.W", 
+      "W....W...W", 
+      "WWWW.W.W.W",
+      "W..W...W.W", 
+      "W.WWWWWW.W", 
+      "W.W......W", 
+      "W.W.WWWWWW", 
+      "W.W......W",
+      "W.WWWWWW.W", 
+      "W........W", 
+      "W.WWWWWWWW", 
+      "W.......FW", 
+      "WWWWWWWWWW",
     ],
     2: [
-      "WWWWWWWWWW", "WHW......W", "WSW.WWWW.W", "W.W.H..W.W", "W.W.WW.W.W",
-      "W.W....W.W", "W.WWWW.W.W", "W......W.W", "WWWWWWWW.W", "W........W",
-      "W.WWWWWW.W", "W.W...FW.W", "W.W.WWWW.W", "W...H..WHW", "WWWWWWWWWW",
+      "WWWWWWWWWW", 
+      "WHW......W", 
+      "WSW.WWWW.W", 
+      "W.W.H..W.W", 
+      "W.W.WW.W.W",
+      "W.W....W.W", 
+      "W.WWWW.W.W", 
+      "W......W.W", 
+      "WWWWWWWW.W", 
+      "W........W",
+      "W.WWWWWW.W", 
+      "W.W...FW.W", 
+      "W.W.WWWW.W", 
+      "W...H..WHW", 
+      "WWWWWWWWWW",
     ],
     3: [
+      "WWWWWWWWWW", 
+      "WS.....HHW", 
+      "WHWWWW...W", 
+      "WW...WWW.W", 
+      "WH.W.W...W",
+      "W..H...WHW", 
+      "W.WWWWWW.W", 
+      "W......W.W", 
+      "WWWWWW.W.W", 
+      "W.H....W.W",
+      "WHW.WWWW.W", 
+      "W...W....W", 
+      "W.WWH.W.WW", 
+      "W.....W.FW", 
+      "WWWWWWWWWW",
+    ],
+    4: [
       "WWWWWWWWWW", 
       "W.SW.....W", 
       "W.HW.WWW.W", 
@@ -112,15 +153,22 @@ class _GyroGameScreenState extends State<GyroGameScreen> {
       "W...H....W", 
       "WWWWWWWWWW",
     ],
-    4: [
-      "WWWWWWWWWW", "WS.W.....W", "W..W.WWW.W", "WH...W...W", "W.WWWW.W.W",
-      "W.H....W.W", "WWWWWW.W.W", "W......W.W", "W.WWWWWW.W", "W.W.H..W.W",
-      "W.W.WW.W.W", "W.H.W..W.H", "W.W.WWWWWW", "W........F", "WWWWWWWWWW",
-    ],
     5: [
-      "WWWWWWWWWW", "WS..H..H.W", "W.WWWWWW.W", "W......W.W", "WHWWWW.W.W",
-      "W.H....W.W", "W.WWWWWW.W", "W.W..H.W.W", "W.W.WW.W.W", "W.H.W..W.H",
-      "W.W.W.WW.W", "W.W...W..W", "W.WWWWW.WW", "WH......FW", "WWWWWWWWWW",
+      "WWWWWWWWWW", 
+      "WS.W...HWW", 
+      "W.HW.W.WWW", 
+      "W....W..HW", 
+      "WHWWWW...W",
+      "WWH...HW.W", 
+      "WW..W....W", 
+      "W...HW.WHW", 
+      "W.WWWW.WWW", 
+      "W.WHHW..WW",
+      "W.W...W.WW", 
+      "W...W.W.WW", 
+      "WHWWW.WWWW", 
+      "W........F", 
+      "WWWWWWWWWW",
     ]
   };
 
