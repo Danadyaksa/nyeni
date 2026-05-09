@@ -31,6 +31,9 @@ class ApiConfig {
   // Feedback endpoints
   static String get feedbacksUrl => "$baseUrl/feedbacks";
   
+  // Recommendation endpoints
+  static String recommendationsUrl(String userId) => "$baseUrl/recommendations/$userId";
+  
   // Admin endpoints
   static String get adminEventsUrl => "$baseUrl/admin/events";
   static String adminEventDetailUrl(int id) => "$baseUrl/admin/events/$id";

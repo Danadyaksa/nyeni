@@ -8,11 +8,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../controllers/event_controller.dart';
 import '../../controllers/ticket_controller.dart';
+import '../../controllers/recommendation_controller.dart';
 import '../../services/notification_service.dart';
 import '../../config/api_config.dart';
 import '../../utils/price_helper.dart';
+import '../../models/recommendation_model.dart';
 import '../widgets/user/event_card.dart';
 import '../widgets/user/recommendation_card.dart';
+import '../widgets/user/recommendation_banner.dart';
 import 'event_detail_screen.dart';
 import 'notification_screen.dart';
 import 'all_events_screen.dart';
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _notifService = NotificationService();
   final _eventController = EventController();
   final _ticketController = TicketController();
+  final _recommendationController = RecommendationController();
 
   // Search & filter state
   final TextEditingController _searchCtrl = TextEditingController();
@@ -44,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _allEvents = [];
   List<dynamic> _recommendedEvents = []; // Store shuffled recommendations once
   List<Map<String, dynamic>> _promoBanners = []; // {id, title, image_url}
+  Recommendation? _aiRecommendation; // AI-based recommendations
   bool _isLoading = true;
 
   late PageController _pageController;
@@ -55,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserData();
     _fetchEvents();
+    _fetchAIRecommendations();
     _refreshNotifCount();
     // Jalankan daily checks saat home dibuka
     NotificationService().runDailyChecks();
@@ -262,6 +268,43 @@ class _HomeScreenState extends State<HomeScreen> {
         _promoBanners = withImage.take(5).cast<Map<String, dynamic>>().toList();
         _isLoading = false;
       });
+    }
+  }
+
+  // Fetch AI-based recommendations
+  Future<void> _fetchAIRecommendations() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      if (userDataString == null) {
+        debugPrint('❌ No user data found');
+        return;
+      }
+
+      final userData = jsonDecode(userDataString);
+      final userId = userData['id']?.toString();
+      if (userId == null) {
+        debugPrint('❌ No user ID found');
+        return;
+      }
+
+      debugPrint('📊 Fetching recommendations for user $userId');
+      final recommendation = await _recommendationController.getRecommendations(userId);
+      
+      if (recommendation == null) {
+        debugPrint('❌ Recommendation is null');
+      } else {
+        debugPrint('✅ Got recommendation: ${recommendation.events.length} events');
+      }
+      
+      if (mounted && recommendation != null) {
+        setState(() {
+          _aiRecommendation = recommendation;
+        });
+        debugPrint('✅ AI recommendation set in state');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching AI recommendations: $e');
     }
   }
 
@@ -763,9 +806,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+            const SizedBox(height: 16),
+
+            // 2. AI RECOMMENDATION BANNER
+            if (_aiRecommendation != null && _aiRecommendation!.events.isNotEmpty)
+              RecommendationBanner(recommendation: _aiRecommendation!),
+
             const SizedBox(height: 24),
 
-            // 2. KATEGORI FILTER
+            // 3. KATEGORI FILTER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text("Kategori Acara", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF3A302A))),
@@ -802,7 +851,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 24),
 
-            // 3. GRID 2 KOLOM EVENT DARI DATABASE
+            // 4. GRID 2 KOLOM EVENT DARI DATABASE
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -908,7 +957,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               
-            // 4. EVENT TERBARU SECTION
+            // 5. EVENT TERBARU SECTION
             const SizedBox(height: 32),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

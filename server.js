@@ -971,6 +971,96 @@ app.get('/api/admin/revenue', (req, res) => {
   });
 });
 
+// AI RECOMMENDATION SYSTEM
+app.get('/api/recommendations/:userId', (req, res) => {
+  const userId = req.params.userId;
+  console.log(`📊 Fetching recommendations for user ${userId}`);
+
+  // Step 1: Analisis kategori favorit dari riwayat pembelian
+  // Karena tickets tidak punya event_id, kita extract base event name
+  const categoryQuery = `
+    SELECT e.category, COUNT(*) as count
+    FROM tickets t
+    JOIN events e ON (
+      t.event_name LIKE CONCAT(e.title, '%')
+      OR e.title LIKE CONCAT(SUBSTRING_INDEX(t.event_name, ' - ', 1), '%')
+    )
+    WHERE t.user_id = ? AND t.status IN ('ACTIVE', 'USED')
+    GROUP BY e.category
+    ORDER BY count DESC
+    LIMIT 1
+  `;
+
+  db.query(categoryQuery, [userId], (err, categoryResults) => {
+    if (err) {
+      console.error('❌ Category query error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+
+    console.log('📈 Category results:', categoryResults);
+
+    // Step 2: Cek apakah user punya riwayat
+    if (categoryResults.length > 0 && categoryResults[0].category) {
+      const favoriteCategory = categoryResults[0].category;
+      console.log(`✅ Favorite category: ${favoriteCategory}`);
+
+      // Get 5 events dari kategori favorit
+      const recommendQuery = `
+        SELECT * FROM events
+        WHERE category = ? AND is_active = 1
+        ORDER BY created_at DESC
+        LIMIT 5
+      `;
+
+      db.query(recommendQuery, [favoriteCategory], (err, events) => {
+        if (err) {
+          console.error('❌ Recommend query error:', err.message);
+          return res.status(500).json({ error: err.message });
+        }
+
+        console.log(`✅ Found ${events.length} events for category ${favoriteCategory}`);
+
+        return res.json({
+          hasHistory: true,
+          category: favoriteCategory,
+          message: `Berdasarkan riwayat pembelian kamu, BAGAS merekomendasikan event kategori ${favoriteCategory}`,
+          events: events,
+        });
+      });
+    } else {
+      // User belum punya riwayat - fallback ke event terbaru
+      console.log('ℹ️ No purchase history, using fallback');
+      getFallbackRecommendations(res);
+    }
+  });
+});
+
+// Helper function for fallback recommendations
+function getFallbackRecommendations(res) {
+  const fallbackQuery = `
+    SELECT * FROM events
+    WHERE is_active = 1
+    ORDER BY created_at DESC
+    LIMIT 5
+  `;
+
+  db.query(fallbackQuery, (err, events) => {
+    if (err) {
+      console.error('❌ Fallback query error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+
+    console.log(`✅ Fallback: Found ${events.length} latest events`);
+
+    return res.json({
+      hasHistory: false,
+      category: null,
+      message: 'BAGAS merekomendasikan event terbaru minggu ini:',
+      events: events,
+    });
+  });
+}
+
 // JALANKAN SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
