@@ -335,7 +335,7 @@ app.post('/api/tickets/checkout', (req, res) => {
   `;
   db.query(sql, [ticketId, user_id, event_name, event_date, unique_code || 0, service_fee || 2500, ticket_price || 0, total_amount || 0], (err) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'Pesanan masuk bos, nunggu di-acc admin dlu!', ticket_id: ticketId });
+    res.json({ message: 'Pesanan sudah masuk , mohon untuk menunggu acc admin!', ticket_id: ticketId });
   });
 });
 

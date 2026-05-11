@@ -274,7 +274,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Pesanan lu udah masuk bos. Pembayaran lagi dicek Admin. Kalo udah di-acc, tiket otomatis aktif di menu Profile ye!',
+              'Pesanan sudah diterima, mohon untuk menunggu konfirmasi pembayaran dari admin. jika sudah terkonfirmasi, tiket otomatis aktif dan dapat diakses di menu profil!',
               textAlign: TextAlign.center,
               style: GoogleFonts.manrope(
                 color: const Color(0xFF78706A),
