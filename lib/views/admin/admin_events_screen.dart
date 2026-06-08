@@ -647,6 +647,46 @@ class _EventFormSheetState extends State<_EventFormSheet> {
   // Saving
   bool _isSaving = false;
 
+  // Autocomplete Lokasi (Nominatim OpenStreetMap)
+  List<dynamic> _locationSuggestions = [];
+  bool _isSearchingLocation = false;
+
+  Future<void> _searchLocation(String query) async {
+    if (query.trim().isEmpty) return;
+    setState(() {
+      _isSearchingLocation = true;
+      _locationSuggestions = [];
+    });
+    try {
+      final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=5');
+      final response = await http.get(url, headers: {
+        'User-Agent': 'nyeni_app',
+      });
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _locationSuggestions = data;
+        });
+        if (data.isEmpty && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Lokasi tidak ditemukan! Coba ketik lebih detail.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error searching location: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearchingLocation = false;
+        });
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1019,7 +1059,10 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                       date: _eventStartDate,
                       icon: LucideIcons.calendarDays,
                       onTap: () async {
-                        final d = await _pickDate(initial: _eventStartDate);
+                        final d = await _pickDate(
+                          initial: _eventStartDate,
+                          lastDate: _eventEndDate,
+                        );
                         if (d != null) setState(() => _eventStartDate = d);
                       },
                     ),
@@ -1057,7 +1100,66 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                       label: 'Nama Lokasi / Venue',
                       icon: LucideIcons.mapPin,
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Lokasi wajib diisi' : null,
+                      suffixIcon: _isSearchingLocation
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: CircularProgressIndicator(strokeWidth: 2, color: _primary),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(LucideIcons.search, color: _primary),
+                              onPressed: () => _searchLocation(_locationCtrl.text),
+                            ),
                     ),
+                    if (_locationSuggestions.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _locationSuggestions.length,
+                          itemBuilder: (context, index) {
+                            final item = _locationSuggestions[index];
+                            final name = item['display_name'] ?? '';
+                            final latStr = item['lat']?.toString();
+                            final lonStr = item['lon']?.toString();
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(LucideIcons.mapPin, color: _primary, size: 16),
+                              title: Text(
+                                name,
+                                style: const TextStyle(fontSize: 12),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() {
+                                  _locationCtrl.text = name;
+                                  if (latStr != null && lonStr != null) {
+                                    final lat = double.tryParse(latStr);
+                                    final lon = double.tryParse(lonStr);
+                                    if (lat != null && lon != null) {
+                                      _pickedLocation = LatLng(lat, lon);
+                                      _mapController.move(_pickedLocation!, 15);
+                                    }
+                                  }
+                                  _locationSuggestions = [];
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 14),
                     _buildMapPicker(),
                     const SizedBox(height: 20),
@@ -1080,7 +1182,15 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                             date: _regularStart,
                             icon: LucideIcons.calendar,
                             onTap: () async {
-                              final d = await _pickDate(initial: _regularStart);
+                              final maxDate = _eventEndDate ?? _eventStartDate;
+                              DateTime initDate = _regularStart ?? DateTime.now();
+                              if (maxDate != null && initDate.isAfter(maxDate)) {
+                                initDate = maxDate;
+                              }
+                              final d = await _pickDate(
+                                initial: initDate,
+                                lastDate: maxDate,
+                              );
                               if (d != null) setState(() => _regularStart = d);
                             },
                             compact: true,
@@ -1093,7 +1203,16 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                             date: _regularEnd,
                             icon: LucideIcons.calendar,
                             onTap: () async {
-                              final d = await _pickDate(initial: _regularEnd ?? _regularStart);
+                              final maxDate = _eventEndDate ?? _eventStartDate;
+                              DateTime initDate = _regularEnd ?? _regularStart ?? DateTime.now();
+                              if (maxDate != null && initDate.isAfter(maxDate)) {
+                                initDate = maxDate;
+                              }
+                              final d = await _pickDate(
+                                initial: initDate,
+                                firstDate: _regularStart,
+                                lastDate: maxDate,
+                              );
                               if (d != null) setState(() => _regularEnd = d);
                             },
                             compact: true,
@@ -1120,7 +1239,15 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                             date: _earlyBirdStart,
                             icon: LucideIcons.calendar,
                             onTap: () async {
-                              final d = await _pickDate(initial: _earlyBirdStart);
+                              final maxDate = _regularStart?.subtract(const Duration(days: 1)) ?? _eventStartDate?.subtract(const Duration(days: 1));
+                              DateTime initDate = _earlyBirdStart ?? DateTime.now();
+                              if (maxDate != null && initDate.isAfter(maxDate)) {
+                                initDate = maxDate;
+                              }
+                              final d = await _pickDate(
+                                initial: initDate,
+                                lastDate: maxDate,
+                              );
                               if (d != null) setState(() => _earlyBirdStart = d);
                             },
                             compact: true,
@@ -1133,7 +1260,16 @@ class _EventFormSheetState extends State<_EventFormSheet> {
                             date: _earlyBirdEnd,
                             icon: LucideIcons.calendar,
                             onTap: () async {
-                              final d = await _pickDate(initial: _earlyBirdEnd ?? _earlyBirdStart);
+                              final maxDate = _regularStart?.subtract(const Duration(days: 1)) ?? _eventStartDate?.subtract(const Duration(days: 1));
+                              DateTime initDate = _earlyBirdEnd ?? _earlyBirdStart ?? DateTime.now();
+                              if (maxDate != null && initDate.isAfter(maxDate)) {
+                                initDate = maxDate;
+                              }
+                              final d = await _pickDate(
+                                initial: initDate,
+                                firstDate: _earlyBirdStart,
+                                lastDate: maxDate,
+                              );
                               if (d != null) setState(() => _earlyBirdEnd = d);
                             },
                             compact: true,
@@ -1243,6 +1379,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
     String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -1253,6 +1390,7 @@ class _EventFormSheetState extends State<_EventFormSheet> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, size: 18, color: _primary),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

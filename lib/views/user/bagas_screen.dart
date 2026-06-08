@@ -56,7 +56,7 @@ class _BagasScreenState extends State<BagasScreen> {
 
   void _initAI() {
     _model = GenerativeModel(
-      model: 'gemini-flash-latest',
+      model: 'gemini-3.5-flash',
       apiKey: _apiKey,
       systemInstruction: Content.system(
         'Nama kamu adalah BAGAS (Bot Asisten Galeri & Seni). '
